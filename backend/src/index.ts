@@ -14,6 +14,11 @@ app.use((_req, res) => {
 
 app.use(errorHandler);
 
+
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', service: 'backend' });
+});
+
 app.listen(port, () => {
   console.log(`Backend running on http://localhost:${port}`);
 });

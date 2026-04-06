@@ -36,6 +36,14 @@ npm run dev:frontend
 - Backend: `http://localhost:3001`
 - Frontend: `http://localhost:5173`
 
+## Rotas do backend
+
+- `GET /health`: verificação de saúde da API.
+- `POST /whatsapp/connect`: inicia a conexão da sessão WhatsApp via Baileys.
+- `GET /whatsapp/status`: consulta o estado atual da conexão.
+
+> Nesta fase do MVP, a base de sessão foi implementada sem automações de recebimento e sem reconexão automática. A estrutura foi organizada para facilitar evolução futura.
+
 ## Scripts úteis
 
 Na raiz:
@@ -58,4 +66,5 @@ No frontend:
 
 ## Status
 
+Estrutura inicial criada com base de integração de sessão WhatsApp, sem regra de negócio de automações neste momento.
 Estrutura inicial criada, sem implementação de regra de negócio neste momento.

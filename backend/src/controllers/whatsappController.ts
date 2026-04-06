@@ -7,6 +7,11 @@ type SendMessageBody = {
   text?: unknown;
 };
 
+type SendMessageBody = {
+  number?: unknown;
+  text?: unknown;
+};
+
 export async function startWhatsappConnectionController(
   _req: Request,
   res: Response,
@@ -55,45 +60,22 @@ export async function sendWhatsappMessageController(
       return;
     }
 
-    try {
-      const result = await whatsappSessionService.sendTextMessage(sanitizedNumber, trimmedText);
-      const logId = messageLogRepository.create({
-        destinationNumber: sanitizedNumber,
-        content: trimmedText,
-        sentAt: new Date().toISOString(),
-        status: 'sent'
-      });
+    const result = await whatsappSessionService.sendTextMessage(sanitizedNumber, trimmedText);
 
-      res.status(200).json({
-        message: 'Mensagem enviada com sucesso.',
-        data: {
-          ...result,
-          logId
+    res.status(200).json({
+      message: 'Mensagem enviada com sucesso.',
+      data: result
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('não está conectada')) {
+      res.status(409).json({
+        error: {
+          message: error.message
         }
       });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Falha ao enviar mensagem.';
-      const logId = messageLogRepository.create({
-        destinationNumber: sanitizedNumber,
-        content: trimmedText,
-        sentAt: new Date().toISOString(),
-        status: 'failed',
-        errorMessage
-      });
-
-      if (errorMessage.includes('não está conectada')) {
-        res.status(409).json({
-          error: {
-            message: errorMessage,
-            logId
-          }
-        });
-        return;
-      }
-
-      next(error);
+      return;
     }
-  } catch (error) {
+
     next(error);
   }
 }

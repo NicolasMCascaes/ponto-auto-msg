@@ -67,3 +67,4 @@ No frontend:
 ## Status
 
 Estrutura inicial criada com base de integração de sessão WhatsApp, sem regra de negócio de automações neste momento.
+Estrutura inicial criada, sem implementação de regra de negócio neste momento.

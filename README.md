@@ -38,9 +38,11 @@ npm run dev:frontend
 
 ## Rotas do backend
 
+- Persistência simples em SQLite (`./.data/messages.sqlite`) para logs de envio manual com número, conteúdo, data/hora, status e erro (quando houver).
 - `GET /health`: verificação de saúde da API.
 - `POST /whatsapp/connect`: inicia a conexão da sessão WhatsApp via Baileys.
 - `GET /whatsapp/status`: consulta o estado atual da conexão.
+- `POST /messages/send`: envia mensagem manual (`number` e `text`) usando sessão ativa do Baileys.
 
 > Nesta fase do MVP, a base de sessão foi implementada sem automações de recebimento e sem reconexão automática. A estrutura foi organizada para facilitar evolução futura.
 

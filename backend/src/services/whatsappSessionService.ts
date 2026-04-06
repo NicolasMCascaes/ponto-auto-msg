@@ -21,6 +21,11 @@ export type WhatsappSessionStatus = {
   qr?: string;
 };
 
+export type WhatsappSendMessageResult = {
+  jid: string;
+  messageId: string;
+};
+
 class WhatsappSessionService {
   private status: WhatsappSessionStatus = {
     state: 'idle',
@@ -78,9 +83,13 @@ class WhatsappSessionService {
         }
 
         if (connection === 'close') {
-          const disconnectCode = Number(lastDisconnect?.error?.output?.statusCode ?? 0);
+          const disconnectCode = Number(
+            (lastDisconnect?.error as { output?: { statusCode?: number } } | undefined)?.output
+              ?.statusCode ?? 0
+          );
           const isLoggedOut = disconnectCode === DisconnectReason.loggedOut;
 
+          this.socket = undefined;
           this.updateStatus({
             state: isLoggedOut ? 'error' : 'disconnected',
             isConnected: false,
@@ -105,6 +114,24 @@ class WhatsappSessionService {
 
       throw error;
     }
+  }
+
+  async sendTextMessage(number: string, text: string): Promise<WhatsappSendMessageResult> {
+    if (!this.socket || !this.status.isConnected) {
+      throw new Error('Sessão WhatsApp não está conectada. Conecte antes de enviar mensagens.');
+    }
+
+    const jid = `${number}@s.whatsapp.net`;
+    const sentMessage = await this.socket.sendMessage(jid, { text });
+
+    if (!sentMessage?.key?.id) {
+      throw new Error('Mensagem enviada sem identificador de confirmação.');
+    }
+
+    return {
+      jid,
+      messageId: sentMessage.key.id
+    };
   }
 
   getStatus(): WhatsappSessionStatus {

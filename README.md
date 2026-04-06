@@ -38,6 +38,7 @@ npm run dev:frontend
 
 ## Rotas do backend
 
+- Persistência simples em SQLite (`./.data/messages.sqlite`) para logs de envio manual com número, conteúdo, data/hora, status e erro (quando houver).
 - `GET /health`: verificação de saúde da API.
 - `POST /whatsapp/connect`: inicia a conexão da sessão WhatsApp via Baileys.
 - `GET /whatsapp/status`: consulta o estado atual da conexão.

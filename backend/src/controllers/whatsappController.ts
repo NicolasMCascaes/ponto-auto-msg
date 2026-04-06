@@ -1,5 +1,11 @@
 import type { NextFunction, Request, Response } from 'express';
 import { whatsappSessionService } from '../services/whatsappSessionService.js';
+import { messageLogRepository } from '../services/messageLogRepository.js';
+
+type SendMessageBody = {
+  number?: unknown;
+  text?: unknown;
+};
 
 type SendMessageBody = {
   number?: unknown;

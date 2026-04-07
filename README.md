@@ -43,7 +43,6 @@ npm run dev:frontend
 - `POST /whatsapp/connect`: inicia a conexão da sessão WhatsApp via Baileys.
 - `GET /whatsapp/status`: consulta o estado atual da conexão.
 - `POST /messages/send`: envia mensagem manual (`number` e `text`) usando sessão ativa do Baileys.
-- `GET /messages/recent`: retorna os envios mais recentes salvos em SQLite.
 
 > Nesta fase do MVP, a base de sessão foi implementada sem automações de recebimento e sem reconexão automática. A estrutura foi organizada para facilitar evolução futura.
 

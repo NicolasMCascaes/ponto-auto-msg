@@ -11,6 +11,5 @@ const whatsappRouter = Router();
 whatsappRouter.post('/whatsapp/connect', startWhatsappConnectionController);
 whatsappRouter.get('/whatsapp/status', getWhatsappStatusController);
 whatsappRouter.post('/messages/send', sendWhatsappMessageController);
-whatsappRouter.get('/messages/recent', getRecentMessagesController);
 
 export { whatsappRouter };

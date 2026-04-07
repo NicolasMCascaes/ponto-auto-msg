@@ -12,15 +12,6 @@ export type CreateMessageLogInput = {
   errorMessage?: string;
 };
 
-export type MessageLog = {
-  id: number;
-  destinationNumber: string;
-  content: string;
-  sentAt: string;
-  status: MessageLogStatus;
-  errorMessage?: string;
-};
-
 class MessageLogRepository {
   private readonly database: DatabaseSync;
 
@@ -61,33 +52,6 @@ class MessageLogRepository {
     );
 
     return Number(result.lastInsertRowid);
-  }
-
-  listRecent(limit = 10): MessageLog[] {
-    const statement = this.database.prepare(`
-      SELECT id, destination_number, content, sent_at, status, error_message
-      FROM message_logs
-      ORDER BY id DESC
-      LIMIT ?
-    `);
-
-    const rows = statement.all(limit) as Array<{
-      id: number;
-      destination_number: string;
-      content: string;
-      sent_at: string;
-      status: MessageLogStatus;
-      error_message: string | null;
-    }>;
-
-    return rows.map((row) => ({
-      id: row.id,
-      destinationNumber: row.destination_number,
-      content: row.content,
-      sentAt: row.sent_at,
-      status: row.status,
-      errorMessage: row.error_message ?? undefined
-    }));
   }
 }
 

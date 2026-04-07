@@ -70,3 +70,12 @@ No frontend:
 
 Estrutura inicial criada com base de integração de sessão WhatsApp, sem regra de negócio de automações neste momento.
 Estrutura inicial criada, sem implementação de regra de negócio neste momento.
+
+
+## Interface frontend
+
+A tela inicial já contém uma interface simples para:
+- visualizar status da conexão WhatsApp
+- iniciar conexão
+- enviar mensagem manual
+- listar os últimos envios

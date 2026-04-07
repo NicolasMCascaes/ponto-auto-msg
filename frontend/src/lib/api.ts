@@ -107,9 +107,23 @@ const API_BASE = (configuredApiBase && configuredApiBase.length > 0 ? configured
   /\/$/,
   ''
 );
+const USE_NGROK_BYPASS_HEADER = /ngrok-free\.(app|dev)/.test(API_BASE);
 
 function buildApiUrl(path: string): string {
   return `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
+function withDefaultHeaders(init?: RequestInit): RequestInit {
+  const headers = new Headers(init?.headers);
+
+  if (USE_NGROK_BYPASS_HEADER) {
+    headers.set('ngrok-skip-browser-warning', 'true');
+  }
+
+  return {
+    ...init,
+    headers
+  };
 }
 
 function parseApiPayload(raw: string): { error?: { message?: string } } {
@@ -142,7 +156,7 @@ function buildQueryString(params: Record<string, string | number | undefined>): 
 }
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(buildApiUrl(path), init);
+  const response = await fetch(buildApiUrl(path), withDefaultHeaders(init));
   const raw = await response.text();
   const payload = parseApiPayload(raw);
 
@@ -195,9 +209,12 @@ export const api = {
     });
   },
   async deleteContact(id: number) {
-    const response = await fetch(buildApiUrl(`/contacts/${id}`), {
+    const response = await fetch(
+      buildApiUrl(`/contacts/${id}`),
+      withDefaultHeaders({
       method: 'DELETE'
-    });
+      })
+    );
 
     if (!response.ok) {
       const raw = await response.text();
@@ -227,9 +244,12 @@ export const api = {
     });
   },
   async deleteContactList(id: number) {
-    const response = await fetch(buildApiUrl(`/contact-lists/${id}`), {
+    const response = await fetch(
+      buildApiUrl(`/contact-lists/${id}`),
+      withDefaultHeaders({
       method: 'DELETE'
-    });
+      })
+    );
 
     if (!response.ok) {
       const raw = await response.text();

@@ -8,6 +8,7 @@ import { errorHandler } from './middlewares/errorHandler.js';
 
 const app = express();
 const port = Number(process.env.PORT) || 3001;
+app.set('etag', false);
 const configuredCorsOrigins = (process.env.CORS_ORIGINS ?? '')
   .split(',')
   .map((origin) => origin.trim())
@@ -42,6 +43,8 @@ app.use((req: Request, res: Response, next) => {
       'Content-Type, Authorization, ngrok-skip-browser-warning'
     );
   }
+
+  res.header('Cache-Control', 'no-store');
 
   if (req.method === 'OPTIONS') {
     res.sendStatus(204);

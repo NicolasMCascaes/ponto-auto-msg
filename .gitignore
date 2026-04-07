@@ -1,1 +1,13 @@
 node_modules/
+backend/dist/
+frontend/dist/
+frontend/src/*.js
+frontend/vite.config.js
+frontend/tsconfig.tsbuildinfo
+frontend/.env.local
+.data/
+.baileys_auth/
+backend/.data/
+backend/.baileys_auth/
+.vercel/
+frontend/.vercel/

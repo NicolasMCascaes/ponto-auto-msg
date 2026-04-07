@@ -1,58 +1,80 @@
-# Ponto Auto Msg - MVP Inicial
+# Ponto Auto Msg
 
-Este repositório segue o escopo do `MVP.md` e contém a estrutura inicial de um monorepo para envio de mensagens internas com Baileys.
+Monorepo com:
 
-## Estrutura
+- `backend/`: API em Node.js + TypeScript + Express + SQLite
+- `frontend/`: painel React + Vite + shadcn/ui para sessao, agenda, listas, envio e historico
 
-- `backend/`: API em Node.js + TypeScript + Express
-- `frontend/`: aplicação React + Vite + TypeScript
-- `MVP.md`: definição de stack, funcionalidades do MVP e fora de escopo
-
-## Pré-requisitos
+## Requisitos
 
 - Node.js 20+
 - npm 10+
 
-## Como rodar
+## Setup local
 
-1. Instale as dependências na raiz:
+O fluxo recomendado neste ambiente e:
+
+```bash
+bash scripts/setup-codex-env.sh
+```
+
+Ou, manualmente:
 
 ```bash
 npm install
+npm run build --workspace backend
+npm run build --workspace frontend
 ```
 
-2. Em um terminal, rode o backend:
+Para desenvolvimento:
 
 ```bash
 npm run dev:backend
-```
-
-3. Em outro terminal, rode o frontend:
-
-```bash
 npm run dev:frontend
 ```
 
-- Backend: `http://localhost:3001`
-- Frontend: `http://localhost:5173`
+- Backend local: `http://localhost:3001`
+- Frontend local: `http://localhost:5173`
 
-## Rotas do backend
+## Deploy do frontend na Vercel
 
-- Persistência simples em SQLite (`./.data/messages.sqlite`) para logs de envio manual com número, conteúdo, data/hora, status e erro (quando houver).
-- `GET /health`: verificação de saúde da API.
-- `POST /whatsapp/connect`: inicia a conexão da sessão WhatsApp via Baileys.
-- `GET /whatsapp/status`: consulta o estado atual da conexão.
-- `POST /messages/send`: envia mensagem manual (`number` e `text`) usando sessão ativa do Baileys.
+O frontend esta preparado para ser publicado como um projeto separado da Vercel usando `Root Directory = frontend`.
 
-> Nesta fase do MVP, a base de sessão foi implementada sem automações de recebimento e sem reconexão automática. A estrutura foi organizada para facilitar evolução futura.
+### Configuracao recomendada
 
-## Scripts úteis
+1. Importe este repositorio na Vercel.
+2. Em `Root Directory`, selecione `frontend`.
+3. Confirme que o comando de build esta como `npm run build`.
+4. Confirme que o output esta como `dist`.
+5. Adicione a variavel de ambiente `VITE_API_BASE_URL` apontando para a URL publica do backend.
+
+Exemplo:
+
+```bash
+VITE_API_BASE_URL=https://api.seu-dominio.com
+```
+
+Se o backend estiver publicado em um prefixo, como `/api`, inclua esse trecho na variavel:
+
+```bash
+VITE_API_BASE_URL=https://seu-dominio.com/api
+```
+
+O arquivo `frontend/vercel.json` ja inclui o rewrite de SPA para que rotas do `react-router-dom` funcionem em refresh e acesso direto.
+
+### Observacoes importantes
+
+- Em desenvolvimento, o frontend continua usando `/api` com proxy do Vite para `http://localhost:3001`.
+- Em producao, o frontend usa `VITE_API_BASE_URL` tanto em Preview quanto em Production.
+- Um arquivo de exemplo foi adicionado em `frontend/.env.example`.
+
+## Scripts uteis
 
 Na raiz:
 
-- `npm run dev:backend`: inicia backend em modo desenvolvimento
-- `npm run dev:frontend`: inicia frontend em modo desenvolvimento
-- `npm run build`: build de todos os workspaces
+- `npm run dev:backend`
+- `npm run dev:frontend`
+- `npm run build`
 
 No backend:
 
@@ -65,17 +87,3 @@ No frontend:
 - `npm run dev`
 - `npm run build`
 - `npm run preview`
-
-## Status
-
-Estrutura inicial criada com base de integração de sessão WhatsApp, sem regra de negócio de automações neste momento.
-Estrutura inicial criada, sem implementação de regra de negócio neste momento.
-
-
-## Interface frontend
-
-A tela inicial já contém uma interface simples para:
-- visualizar status da conexão WhatsApp
-- iniciar conexão
-- enviar mensagem manual
-- listar os últimos envios

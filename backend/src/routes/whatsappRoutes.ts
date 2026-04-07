@@ -1,15 +1,14 @@
 import { Router } from 'express';
 import {
-  getRecentMessagesController,
   getWhatsappStatusController,
-  sendWhatsappMessageController,
+  resetWhatsappConnectionController,
   startWhatsappConnectionController
 } from '../controllers/whatsappController.js';
 
 const whatsappRouter = Router();
 
 whatsappRouter.post('/whatsapp/connect', startWhatsappConnectionController);
+whatsappRouter.post('/whatsapp/reset', resetWhatsappConnectionController);
 whatsappRouter.get('/whatsapp/status', getWhatsappStatusController);
-whatsappRouter.post('/messages/send', sendWhatsappMessageController);
 
 export { whatsappRouter };

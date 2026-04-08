@@ -68,6 +68,49 @@ Payload de cadastro/login:
 
 O endpoint `GET /auth/me` espera `Authorization: Bearer <token>`.
 
+
+## Deploy do backend na Vercel
+
+O backend agora inclui `backend/vercel.json` e um entrypoint serverless em `backend/api/index.ts`.
+
+### Como configurar no painel da Vercel
+
+1. Importe este repositorio na Vercel (ou use o projeto ja criado).
+2. Defina **Root Directory = `backend`**.
+3. Framework preset: **Other**.
+4. Build Command: `npm run build`.
+5. Install Command: `npm install`.
+6. Nao defina Output Directory (funcoes serverless nao usam `dist` publico).
+7. Runtime da funcao: `nodejs22.x` (ja definido no `vercel.json`).
+
+### Variaveis de ambiente minimas
+
+No projeto do backend na Vercel, configure:
+
+```bash
+JWT_SECRET=troque-por-um-valor-forte
+JWT_EXPIRES_IN=7d
+CORS_ORIGINS=https://seu-frontend.vercel.app
+```
+
+Se tiver ambiente Preview e Production com URLs diferentes, inclua ambas separadas por virgula em `CORS_ORIGINS`.
+
+### Por que o build/deploy costuma falhar
+
+1. **Node desatualizado**: este backend usa `node:sqlite`, que requer Node 22+.
+2. **Root Directory incorreto**: se ficar na raiz do monorepo, a Vercel tenta pipeline diferente do backend.
+3. **Tentativa de `app.listen` em serverless**: na Vercel a aplicacao precisa exportar o app, sem abrir porta manualmente.
+
+### Limites importantes na Vercel para este backend
+
+Este projeto tem partes **stateful** (`.data/messages.sqlite` e sessao do WhatsApp em `.baileys_auth`). Em Serverless, o filesystem e efemero e multiplas invocacoes podem acontecer em instancias diferentes.
+
+Na pratica:
+- endpoints stateless (health, auth, CRUD simples) tendem a funcionar melhor;
+- sessao persistente do WhatsApp e SQLite local podem ficar instaveis na Vercel.
+
+Para operacao estavel de producao, prefira hospedar o backend em ambiente com processo persistente e disco duravel (ex.: Railway, Render, Fly.io, VPS).
+
 ## Deploy do frontend na Vercel
 
 O frontend esta preparado para ser publicado como um projeto separado da Vercel usando `Root Directory = frontend`.

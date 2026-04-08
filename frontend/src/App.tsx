@@ -1,6 +1,10 @@
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { LockKeyholeIcon, LogOutIcon } from 'lucide-react';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { toast } from 'sonner';
 import { AppSidebar } from '@/components/app-sidebar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import {
   SidebarInset,
@@ -8,27 +12,63 @@ import {
   SidebarRail,
   SidebarTrigger
 } from '@/components/ui/sidebar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Toaster } from '@/components/ui/sonner';
+import { AuthPage } from '@/pages/auth-page';
 import { ContactsPage } from '@/pages/contacts-page';
 import { DashboardPage } from '@/pages/dashboard-page';
 import { HistoryPage } from '@/pages/history-page';
 import { ListsPage } from '@/pages/lists-page';
 import { SendPage } from '@/pages/send-page';
 import { SessionPage } from '@/pages/session-page';
+import { AppDataProvider } from '@/providers/app-data-provider';
 import { useAppData } from '@/providers/app-data-provider';
+import { useAuth } from '@/providers/auth-provider';
 
 const routeTitles: Record<string, string> = {
   '/': 'Painel',
-  '/session': 'Conexão do WhatsApp',
+  '/session': 'Conexao do WhatsApp',
   '/contacts': 'Agenda',
   '/lists': 'Listas',
   '/send': 'Envios',
-  '/history': 'Histórico'
+  '/history': 'Historico'
 };
 
-function AppLayout() {
+function AppBootScreen() {
+  return (
+    <div className="flex min-h-screen items-center justify-center px-4 py-8">
+      <Card className="w-full max-w-xl border-border/70 bg-card/95 shadow-xl">
+        <CardContent className="flex flex-col gap-6 py-10">
+          <div className="flex items-center gap-3">
+            <div className="rounded-2xl bg-primary/12 p-3 text-primary">
+              <LockKeyholeIcon className="size-5" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-6 w-56" />
+            </div>
+          </div>
+
+          <div className="grid gap-3">
+            <Skeleton className="h-14 w-full rounded-2xl" />
+            <Skeleton className="h-14 w-full rounded-2xl" />
+            <Skeleton className="h-14 w-2/3 rounded-2xl" />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function ProtectedAppLayout() {
   const location = useLocation();
   const { status } = useAppData();
+  const { user, logout } = useAuth();
+
+  function handleLogout() {
+    logout();
+    toast.success('Sessao encerrada com sucesso.');
+  }
 
   return (
     <SidebarProvider defaultOpen>
@@ -45,14 +85,31 @@ function AppLayout() {
                   {routeTitles[location.pathname] ?? 'Ponto Auto Msg'}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Conecte, organize e acompanhe seus envios em um só lugar.
+                  Conecte, organize e acompanhe seus envios em um so lugar.
                 </p>
               </div>
             </div>
 
-            <Badge variant={status?.isConnected ? 'default' : 'secondary'} className="rounded-full px-3 py-1">
-              {status?.isConnected ? 'WhatsApp online' : 'Conexão pendente'}
-            </Badge>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="hidden text-right md:block">
+                <p className="text-xs font-medium uppercase tracking-[0.24em] text-muted-foreground">
+                  Conta ativa
+                </p>
+                <p className="text-sm font-medium text-foreground">{user?.email ?? 'Conta logada'}</p>
+              </div>
+
+              <Badge
+                variant={status?.isConnected ? 'default' : 'secondary'}
+                className="rounded-full px-3 py-1"
+              >
+                {status?.isConnected ? 'WhatsApp online' : 'Conexao pendente'}
+              </Badge>
+
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOutIcon className="size-4" />
+                <span className="hidden sm:inline">Sair</span>
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -67,11 +124,51 @@ function AppLayout() {
           </Routes>
         </div>
       </SidebarInset>
-      <Toaster richColors position="top-right" />
     </SidebarProvider>
   );
 }
 
+function ProtectedApp() {
+  const location = useLocation();
+  const { isAuthenticated, isBooting } = useAuth();
+
+  if (isBooting) {
+    return <AppBootScreen />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace state={{ from: location.pathname }} />;
+  }
+
+  return (
+    <AppDataProvider>
+      <ProtectedAppLayout />
+    </AppDataProvider>
+  );
+}
+
+function AuthOnlyRoute() {
+  const { isAuthenticated, isBooting } = useAuth();
+
+  if (isBooting) {
+    return <AppBootScreen />;
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <AuthPage />;
+}
+
 export default function App() {
-  return <AppLayout />;
+  return (
+    <>
+      <Routes>
+        <Route path="/auth" element={<AuthOnlyRoute />} />
+        <Route path="*" element={<ProtectedApp />} />
+      </Routes>
+      <Toaster richColors position="top-right" />
+    </>
+  );
 }

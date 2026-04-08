@@ -1,4 +1,6 @@
 import express, { type Request, type Response } from 'express';
+import { authenticateRequest } from './middlewares/authenticateRequest.js';
+import { protectedAuthRouter, publicAuthRouter } from './routes/authRoutes.js';
 import { contactListRouter } from './routes/contactListRoutes.js';
 import { contactRouter } from './routes/contactRoutes.js';
 import { healthRouter } from './routes/healthRoutes.js';
@@ -55,6 +57,9 @@ app.use((req: Request, res: Response, next) => {
 });
 app.use(express.json());
 app.use(healthRouter);
+app.use(publicAuthRouter);
+app.use(authenticateRequest);
+app.use(protectedAuthRouter);
 app.use(whatsappRouter);
 app.use(contactRouter);
 app.use(contactListRouter);

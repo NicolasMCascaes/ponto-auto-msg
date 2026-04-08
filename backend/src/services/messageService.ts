@@ -35,9 +35,14 @@ export type SendBatchMessageResult = {
 };
 
 class MessageService {
-  async sendSingle(input: SendSingleMessageInput): Promise<SendSingleMessageResult> {
+  async sendSingle(
+    userId: number,
+    input: SendSingleMessageInput
+  ): Promise<SendSingleMessageResult> {
     const isContactSend = typeof input.contactId === 'number';
-    const recipient = isContactSend ? contactRepository.getRecipientById(input.contactId) : null;
+    const recipient = isContactSend
+      ? contactRepository.getRecipientById(userId, input.contactId)
+      : null;
 
     if (isContactSend && !recipient) {
       throw new Error('Contato nao encontrado ou esta inativo.');
@@ -51,6 +56,7 @@ class MessageService {
       const result = await whatsappSessionService.sendTextMessage(destinationNumber, input.text);
 
       messageLogRepository.create({
+        userId,
         destinationNumber,
         content: input.text,
         sentAt: new Date().toISOString(),
@@ -66,6 +72,7 @@ class MessageService {
       };
     } catch (error) {
       messageLogRepository.create({
+        userId,
         destinationNumber,
         content: input.text,
         sentAt: new Date().toISOString(),
@@ -79,18 +86,18 @@ class MessageService {
     }
   }
 
-  async sendBatch(input: SendBatchMessageInput): Promise<SendBatchMessageResult> {
+  async sendBatch(userId: number, input: SendBatchMessageInput): Promise<SendBatchMessageResult> {
     if (!whatsappSessionService.getStatus().isConnected) {
       throw new Error('Sessao WhatsApp nao esta conectada. Conecte antes de enviar mensagens.');
     }
 
-    const recipients = contactRepository.getBatchRecipients(input.contactIds, input.listIds);
+    const recipients = contactRepository.getBatchRecipients(userId, input.contactIds, input.listIds);
 
     if (recipients.length === 0) {
       throw new Error('Nenhum contato ativo foi encontrado para o envio em lote.');
     }
 
-    const batch = messageLogRepository.createBatch(input.text, recipients.length);
+    const batch = messageLogRepository.createBatch(userId, input.text, recipients.length);
     let successCount = 0;
     let failedCount = 0;
 
@@ -100,6 +107,7 @@ class MessageService {
         successCount += 1;
 
         messageLogRepository.create({
+          userId,
           destinationNumber: recipient.number,
           content: input.text,
           sentAt: new Date().toISOString(),
@@ -113,6 +121,7 @@ class MessageService {
         failedCount += 1;
 
         messageLogRepository.create({
+          userId,
           destinationNumber: recipient.number,
           content: input.text,
           sentAt: new Date().toISOString(),
@@ -126,7 +135,7 @@ class MessageService {
       }
     }
 
-    messageLogRepository.updateBatchCounts(batch.id, successCount, failedCount);
+    messageLogRepository.updateBatchCounts(userId, batch.id, successCount, failedCount);
 
     return {
       batchId: batch.id,

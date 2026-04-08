@@ -11,3 +11,4 @@ backend/.data/
 backend/.baileys_auth/
 .vercel/
 frontend/.vercel/
+backend/.env.local

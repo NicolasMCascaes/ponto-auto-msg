@@ -36,6 +36,38 @@ npm run dev:frontend
 - Backend local: `http://localhost:3001`
 - Frontend local: `http://localhost:5173`
 
+## Autenticacao do backend
+
+O backend agora possui autenticacao simples por email e password com:
+
+- senha protegida por hash com `scrypt`
+- token JWT para sessao
+- persistencia de usuarios no SQLite atual
+
+Variaveis de ambiente suportadas no backend:
+
+```bash
+JWT_SECRET=change-this-secret-in-production
+JWT_EXPIRES_IN=7d
+```
+
+Exemplo de endpoints:
+
+- `POST /auth/register`
+- `POST /auth/login`
+- `GET /auth/me`
+
+Payload de cadastro/login:
+
+```json
+{
+  "email": "admin@exemplo.com",
+  "password": "minha-senha-segura"
+}
+```
+
+O endpoint `GET /auth/me` espera `Authorization: Bearer <token>`.
+
 ## Deploy do frontend na Vercel
 
 O frontend esta preparado para ser publicado como um projeto separado da Vercel usando `Root Directory = frontend`.

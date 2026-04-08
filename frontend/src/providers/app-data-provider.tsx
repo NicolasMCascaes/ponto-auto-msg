@@ -220,7 +220,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     let isMounted = true;
 
     void (async () => {
-      await refreshCoreData();
+      try {
+        await refreshCoreData();
+      } catch {
+        // Session invalidation is handled globally by the auth provider.
+      }
 
       if (isMounted) {
         setIsBooting(false);
@@ -234,7 +238,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
-      void refreshStatus();
+      void refreshStatus().catch(() => {
+        // Session invalidation is handled globally by the auth provider.
+      });
     }, STATUS_POLL_INTERVAL_MS);
 
     return () => {
@@ -244,7 +250,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
-      void refreshRecentMessages();
+      void refreshRecentMessages().catch(() => {
+        // Session invalidation is handled globally by the auth provider.
+      });
     }, RECENT_MESSAGES_POLL_INTERVAL_MS);
 
     return () => {

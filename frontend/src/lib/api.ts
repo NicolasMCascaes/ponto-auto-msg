@@ -96,11 +96,30 @@ export type SendBatchResult = {
   failedCount: number;
 };
 
+export type AuthUser = {
+  id: number;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AuthCredentials = {
+  email: string;
+  password: string;
+};
+
+export type AuthSession = {
+  token: string;
+  user: AuthUser;
+};
+
 type ApiEnvelope<T> = {
   data: T;
   message?: string;
   status?: ConnectionStatus;
 };
+
+type ApiUnauthorizedHandler = () => void;
 
 const configuredApiBase = import.meta.env.VITE_API_BASE_URL?.trim();
 const API_BASE = (configuredApiBase && configuredApiBase.length > 0 ? configuredApiBase : '/api').replace(
@@ -108,6 +127,16 @@ const API_BASE = (configuredApiBase && configuredApiBase.length > 0 ? configured
   ''
 );
 const USE_NGROK_BYPASS_HEADER = /ngrok-free\.(app|dev)/.test(API_BASE);
+let apiAuthToken: string | null = null;
+let unauthorizedHandler: ApiUnauthorizedHandler | null = null;
+
+export function setApiAuthToken(token: string | null) {
+  apiAuthToken = token?.trim() || null;
+}
+
+export function setApiUnauthorizedHandler(handler: ApiUnauthorizedHandler | null) {
+  unauthorizedHandler = handler;
+}
 
 function buildApiUrl(path: string): string {
   return `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`;
@@ -118,6 +147,10 @@ function withDefaultHeaders(init?: RequestInit): RequestInit {
 
   if (USE_NGROK_BYPASS_HEADER) {
     headers.set('ngrok-skip-browser-warning', 'true');
+  }
+
+  if (apiAuthToken && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${apiAuthToken}`);
   }
 
   return {
@@ -135,7 +168,7 @@ function parseApiPayload(raw: string): { error?: { message?: string } } {
     return JSON.parse(raw) as { error?: { message?: string } };
   } catch {
     throw new Error(
-      'A resposta da API veio em formato inválido. Verifique a VITE_API_BASE_URL e o deploy do backend.'
+      'A resposta da API veio em formato invalido. Verifique a VITE_API_BASE_URL e o deploy do backend.'
     );
   }
 }
@@ -161,13 +194,43 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const payload = parseApiPayload(raw);
 
   if (!response.ok) {
-    throw new Error(payload.error?.message ?? 'Falha na requisição.');
+    if (
+      response.status === 401 &&
+      path !== '/auth/login' &&
+      path !== '/auth/register' &&
+      unauthorizedHandler
+    ) {
+      unauthorizedHandler();
+    }
+
+    throw new Error(payload.error?.message ?? 'Falha na requisicao.');
   }
 
   return payload as T;
 }
 
 export const api = {
+  register(input: AuthCredentials) {
+    return requestJson<ApiEnvelope<AuthSession>>('/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(input)
+    });
+  },
+  login(input: AuthCredentials) {
+    return requestJson<ApiEnvelope<AuthSession>>('/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(input)
+    });
+  },
+  getCurrentUser() {
+    return requestJson<ApiEnvelope<{ user: AuthUser }>>('/auth/me');
+  },
   getWhatsappStatus() {
     return requestJson<ConnectionStatus>('/whatsapp/status');
   },
@@ -212,13 +275,18 @@ export const api = {
     const response = await fetch(
       buildApiUrl(`/contacts/${id}`),
       withDefaultHeaders({
-      method: 'DELETE'
+        method: 'DELETE'
       })
     );
 
     if (!response.ok) {
       const raw = await response.text();
       const payload = parseApiPayload(raw);
+
+      if (response.status === 401 && unauthorizedHandler) {
+        unauthorizedHandler();
+      }
+
       throw new Error(payload.error?.message ?? 'Falha ao excluir contato.');
     }
   },
@@ -247,13 +315,18 @@ export const api = {
     const response = await fetch(
       buildApiUrl(`/contact-lists/${id}`),
       withDefaultHeaders({
-      method: 'DELETE'
+        method: 'DELETE'
       })
     );
 
     if (!response.ok) {
       const raw = await response.text();
       const payload = parseApiPayload(raw);
+
+      if (response.status === 401 && unauthorizedHandler) {
+        unauthorizedHandler();
+      }
+
       throw new Error(payload.error?.message ?? 'Falha ao excluir lista.');
     }
   },

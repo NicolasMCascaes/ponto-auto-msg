@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
+import { getAuthenticatedUserId } from '../middlewares/authenticateRequest.js';
 import { contactListRepository } from '../services/contactListRepository.js';
 
 type ContactListBody = {
@@ -32,9 +33,11 @@ function parseContactListInput(body: ContactListBody): { name: string; descripti
   };
 }
 
-export function listContactListsController(_req: Request, res: Response): void {
+export function listContactListsController(req: Request, res: Response): void {
+  const userId = getAuthenticatedUserId(req);
+
   res.status(200).json({
-    data: contactListRepository.list()
+    data: contactListRepository.list(userId)
   });
 }
 
@@ -44,6 +47,7 @@ export function createContactListController(
   next: NextFunction
 ): void {
   try {
+    const userId = getAuthenticatedUserId(req);
     const input = parseContactListInput(req.body);
 
     if (!input) {
@@ -55,7 +59,7 @@ export function createContactListController(
       return;
     }
 
-    if (contactListRepository.existsByName(input.name)) {
+    if (contactListRepository.existsByName(userId, input.name)) {
       res.status(409).json({
         error: {
           message: 'Ja existe uma lista com esse nome.'
@@ -65,7 +69,7 @@ export function createContactListController(
     }
 
     res.status(201).json({
-      data: contactListRepository.create(input)
+      data: contactListRepository.create(userId, input)
     });
   } catch (error) {
     next(error);
@@ -78,6 +82,7 @@ export function updateContactListController(
   next: NextFunction
 ): void {
   try {
+    const userId = getAuthenticatedUserId(req);
     const id = Number.parseInt(req.params.id, 10);
     const input = parseContactListInput(req.body);
 
@@ -90,7 +95,7 @@ export function updateContactListController(
       return;
     }
 
-    if (contactListRepository.existsByName(input.name, id)) {
+    if (contactListRepository.existsByName(userId, input.name, id)) {
       res.status(409).json({
         error: {
           message: 'Ja existe uma lista com esse nome.'
@@ -99,7 +104,7 @@ export function updateContactListController(
       return;
     }
 
-    const list = contactListRepository.update(id, input);
+    const list = contactListRepository.update(userId, id, input);
 
     if (!list) {
       res.status(404).json({
@@ -124,6 +129,7 @@ export function deleteContactListController(
   next: NextFunction
 ): void {
   try {
+    const userId = getAuthenticatedUserId(req);
     const id = Number.parseInt(req.params.id, 10);
 
     if (!Number.isInteger(id) || id <= 0) {
@@ -135,7 +141,7 @@ export function deleteContactListController(
       return;
     }
 
-    if (!contactListRepository.delete(id)) {
+    if (!contactListRepository.delete(userId, id)) {
       res.status(404).json({
         error: {
           message: 'Lista nao encontrada.'

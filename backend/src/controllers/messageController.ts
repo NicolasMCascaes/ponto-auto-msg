@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
+import { getAuthenticatedUserId } from '../middlewares/authenticateRequest.js';
 import { messageLogRepository, type MessageLogStatus } from '../services/messageLogRepository.js';
 import { messageService } from '../services/messageService.js';
 import { isValidPhoneNumber, normalizePhoneNumber } from '../utils/phone.js';
@@ -40,8 +41,10 @@ export function getRecentMessagesController(
   req: Request<unknown, unknown, unknown, MessageQuery>,
   res: Response
 ): void {
+  const userId = getAuthenticatedUserId(req);
+
   res.status(200).json({
-    data: messageLogRepository.listRecent(parseLimit(req.query.limit, 10))
+    data: messageLogRepository.listRecent(userId, parseLimit(req.query.limit, 10))
   });
 }
 
@@ -49,6 +52,7 @@ export function getMessagesController(
   req: Request<unknown, unknown, unknown, MessageQuery>,
   res: Response
 ): void {
+  const userId = getAuthenticatedUserId(req);
   const parsedContactId =
     typeof req.query.contactId === 'string' ? Number.parseInt(req.query.contactId, 10) : undefined;
   const parsedListId =
@@ -64,7 +68,7 @@ export function getMessagesController(
   const search = typeof req.query.search === 'string' ? req.query.search.trim() : undefined;
 
   res.status(200).json({
-    data: messageLogRepository.list({
+    data: messageLogRepository.list(userId, {
       limit: parseLimit(req.query.limit, 50),
       status,
       contactId,
@@ -80,6 +84,7 @@ export async function sendWhatsappMessageController(
   next: NextFunction
 ): Promise<void> {
   try {
+    const userId = getAuthenticatedUserId(req);
     const { number, contactId, text } = req.body;
 
     if (typeof text !== 'string' || text.trim().length === 0) {
@@ -115,7 +120,7 @@ export async function sendWhatsappMessageController(
         return;
       }
 
-      const result = await messageService.sendSingle({
+      const result = await messageService.sendSingle(userId, {
         number: normalized,
         text: text.trim()
       });
@@ -137,7 +142,7 @@ export async function sendWhatsappMessageController(
     }
 
     const parsedContactId = contactId;
-    const result = await messageService.sendSingle({
+    const result = await messageService.sendSingle(userId, {
       contactId: parsedContactId,
       text: text.trim()
     });
@@ -177,6 +182,7 @@ export async function sendBatchMessagesController(
   next: NextFunction
 ): Promise<void> {
   try {
+    const userId = getAuthenticatedUserId(req);
     const { contactIds, listIds, text } = req.body;
 
     if (typeof text !== 'string' || text.trim().length === 0) {
@@ -230,7 +236,7 @@ export async function sendBatchMessagesController(
       return;
     }
 
-    const result = await messageService.sendBatch({
+    const result = await messageService.sendBatch(userId, {
       text: text.trim(),
       contactIds: parsedContactIds,
       listIds: parsedListIds

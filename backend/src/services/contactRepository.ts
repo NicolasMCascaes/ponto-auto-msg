@@ -41,9 +41,9 @@ export type ContactRecipient = {
 };
 
 class ContactRepository {
-  list(filters: ContactFilters = {}): ContactRecord[] {
-    const where: string[] = [];
-    const params: Array<number | string> = [];
+  list(userId: number, filters: ContactFilters = {}): ContactRecord[] {
+    const where: string[] = ['c.user_id = ?'];
+    const params: Array<number | string> = [userId];
 
     if (filters.status === 'active') {
       where.push('c.is_active = 1');
@@ -58,8 +58,11 @@ class ContactRepository {
         EXISTS (
           SELECT 1
           FROM contact_list_members clmf
+          INNER JOIN contact_lists clf
+            ON clf.id = clmf.list_id
           WHERE clmf.contact_id = c.id
             AND clmf.list_id = ?
+            AND clf.user_id = c.user_id
         )
       `);
       params.push(filters.listId);
@@ -93,7 +96,8 @@ class ContactRepository {
         ON clm.contact_id = c.id
       LEFT JOIN contact_lists cl
         ON cl.id = clm.list_id
-      ${where.length > 0 ? `WHERE ${where.join(' AND ')}` : ''}
+       AND cl.user_id = c.user_id
+      WHERE ${where.join(' AND ')}
       ORDER BY c.name COLLATE NOCASE ASC, cl.name COLLATE NOCASE ASC
     `);
 
@@ -112,7 +116,7 @@ class ContactRepository {
     return this.mapRowsToContacts(rows);
   }
 
-  getById(id: number): ContactRecord | null {
+  getById(userId: number, id: number): ContactRecord | null {
     const statement = database.prepare(`
       SELECT
         c.id,
@@ -129,11 +133,13 @@ class ContactRepository {
         ON clm.contact_id = c.id
       LEFT JOIN contact_lists cl
         ON cl.id = clm.list_id
-      WHERE c.id = ?
+       AND cl.user_id = c.user_id
+      WHERE c.user_id = ?
+        AND c.id = ?
       ORDER BY cl.name COLLATE NOCASE ASC
     `);
 
-    const rows = statement.all(id) as Array<{
+    const rows = statement.all(userId, id) as Array<{
       id: number;
       name: string;
       phone_number: string;
@@ -148,20 +154,22 @@ class ContactRepository {
     return this.mapRowsToContacts(rows)[0] ?? null;
   }
 
-  create(input: CreateContactInput): ContactRecord {
+  create(userId: number, input: CreateContactInput): ContactRecord {
     const now = new Date().toISOString();
     const statement = database.prepare(`
       INSERT INTO contacts (
+        user_id,
         name,
         phone_number,
         notes,
         is_active,
         created_at,
         updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
     const result = statement.run(
+      userId,
       input.name,
       input.number,
       input.notes ?? null,
@@ -172,10 +180,10 @@ class ContactRepository {
 
     const contactId = Number(result.lastInsertRowid);
     this.replaceListMemberships(contactId, input.listIds);
-    return this.getById(contactId)!;
+    return this.getById(userId, contactId)!;
   }
 
-  update(id: number, input: UpdateContactInput): ContactRecord | null {
+  update(userId: number, id: number, input: UpdateContactInput): ContactRecord | null {
     const statement = database.prepare(`
       UPDATE contacts
       SET
@@ -185,6 +193,7 @@ class ContactRepository {
         is_active = ?,
         updated_at = ?
       WHERE id = ?
+        AND user_id = ?
     `);
 
     const result = statement.run(
@@ -193,7 +202,8 @@ class ContactRepository {
       input.notes ?? null,
       input.isActive ? 1 : 0,
       new Date().toISOString(),
-      id
+      id,
+      userId
     );
 
     if (Number(result.changes) === 0) {
@@ -201,41 +211,50 @@ class ContactRepository {
     }
 
     this.replaceListMemberships(id, input.listIds);
-    return this.getById(id);
+    return this.getById(userId, id);
   }
 
-  delete(id: number): boolean {
-    const statement = database.prepare(`DELETE FROM contacts WHERE id = ?`);
-    const result = statement.run(id);
+  delete(userId: number, id: number): boolean {
+    const statement = database.prepare(`
+      DELETE FROM contacts
+      WHERE id = ?
+        AND user_id = ?
+    `);
+    const result = statement.run(id, userId);
 
     return Number(result.changes) > 0;
   }
 
-  existsByNumber(number: string, excludeId?: number): boolean {
+  existsByNumber(userId: number, number: string, excludeId?: number): boolean {
     const statement = database.prepare(`
       SELECT id
       FROM contacts
-      WHERE phone_number = ?
-      ${typeof excludeId === 'number' ? 'AND id <> ?' : ''}
+      WHERE user_id = ?
+        AND phone_number = ?
+        ${typeof excludeId === 'number' ? 'AND id <> ?' : ''}
       LIMIT 1
     `);
 
     const row =
       typeof excludeId === 'number'
-        ? statement.get(number, excludeId)
-        : statement.get(number);
+        ? statement.get(userId, number, excludeId)
+        : statement.get(userId, number);
 
     return Boolean(row);
   }
 
-  count(): number {
-    const statement = database.prepare(`SELECT COUNT(*) AS total FROM contacts`);
-    const row = statement.get() as { total: number } | undefined;
+  count(userId: number): number {
+    const statement = database.prepare(`
+      SELECT COUNT(*) AS total
+      FROM contacts
+      WHERE user_id = ?
+    `);
+    const row = statement.get(userId) as { total: number } | undefined;
 
     return Number(row?.total ?? 0);
   }
 
-  getRecipientById(id: number): ContactRecipient | null {
+  getRecipientById(userId: number, id: number): ContactRecipient | null {
     const statement = database.prepare(`
       SELECT
         c.id,
@@ -245,12 +264,16 @@ class ContactRepository {
       FROM contacts c
       LEFT JOIN contact_list_members clm
         ON clm.contact_id = c.id
-      WHERE c.id = ?
+      LEFT JOIN contact_lists cl
+        ON cl.id = clm.list_id
+       AND cl.user_id = c.user_id
+      WHERE c.user_id = ?
+        AND c.id = ?
         AND c.is_active = 1
       GROUP BY c.id
     `);
 
-    const row = statement.get(id) as
+    const row = statement.get(userId, id) as
       | {
           id: number;
           name: string;
@@ -271,7 +294,7 @@ class ContactRepository {
     };
   }
 
-  getBatchRecipients(contactIds: number[], listIds: number[]): ContactRecipient[] {
+  getBatchRecipients(userId: number, contactIds: number[], listIds: number[]): ContactRecipient[] {
     const recipients = new Map<number, ContactRecipient>();
 
     if (contactIds.length > 0) {
@@ -279,11 +302,12 @@ class ContactRepository {
       const statement = database.prepare(`
         SELECT id, name, phone_number
         FROM contacts
-        WHERE is_active = 1
+        WHERE user_id = ?
+          AND is_active = 1
           AND id IN (${placeholders})
       `);
 
-      const rows = statement.all(...contactIds) as Array<{
+      const rows = statement.all(userId, ...contactIds) as Array<{
         id: number;
         name: string;
         phone_number: string;
@@ -310,11 +334,15 @@ class ContactRepository {
         FROM contacts c
         INNER JOIN contact_list_members clm
           ON clm.contact_id = c.id
-        WHERE c.is_active = 1
+        INNER JOIN contact_lists cl
+          ON cl.id = clm.list_id
+        WHERE c.user_id = ?
+          AND cl.user_id = c.user_id
+          AND c.is_active = 1
           AND clm.list_id IN (${placeholders})
       `);
 
-      const rows = statement.all(...listIds) as Array<{
+      const rows = statement.all(userId, ...listIds) as Array<{
         id: number;
         name: string;
         phone_number: string;

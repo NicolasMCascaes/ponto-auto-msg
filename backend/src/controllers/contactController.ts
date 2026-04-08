@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
+import { getAuthenticatedUserId } from '../middlewares/authenticateRequest.js';
 import { contactListRepository } from '../services/contactListRepository.js';
 import {
   contactRepository,
@@ -93,8 +94,10 @@ export function listContactsController(
   req: Request<unknown, unknown, unknown, ContactQuery>,
   res: Response
 ): void {
+  const userId = getAuthenticatedUserId(req);
+
   res.status(200).json({
-    data: contactRepository.list(parseFilters(req.query))
+    data: contactRepository.list(userId, parseFilters(req.query))
   });
 }
 
@@ -104,6 +107,7 @@ export function createContactController(
   next: NextFunction
 ): void {
   try {
+    const userId = getAuthenticatedUserId(req);
     const input = parseContactInput(req.body);
 
     if (!input) {
@@ -116,7 +120,7 @@ export function createContactController(
       return;
     }
 
-    if (contactRepository.existsByNumber(input.number)) {
+    if (contactRepository.existsByNumber(userId, input.number)) {
       res.status(409).json({
         error: {
           message: 'Ja existe um contato com esse numero.'
@@ -125,7 +129,7 @@ export function createContactController(
       return;
     }
 
-    if (!contactListRepository.allExist(input.listIds)) {
+    if (!contactListRepository.allExist(userId, input.listIds)) {
       res.status(400).json({
         error: {
           message: 'Uma ou mais listas informadas nao existem.'
@@ -135,7 +139,7 @@ export function createContactController(
     }
 
     res.status(201).json({
-      data: contactRepository.create(input)
+      data: contactRepository.create(userId, input)
     });
   } catch (error) {
     next(error);
@@ -148,6 +152,7 @@ export function updateContactController(
   next: NextFunction
 ): void {
   try {
+    const userId = getAuthenticatedUserId(req);
     const id = Number.parseInt(req.params.id, 10);
     const input = parseContactInput(req.body);
 
@@ -160,7 +165,7 @@ export function updateContactController(
       return;
     }
 
-    if (contactRepository.existsByNumber(input.number, id)) {
+    if (contactRepository.existsByNumber(userId, input.number, id)) {
       res.status(409).json({
         error: {
           message: 'Ja existe um contato com esse numero.'
@@ -169,7 +174,7 @@ export function updateContactController(
       return;
     }
 
-    if (!contactListRepository.allExist(input.listIds)) {
+    if (!contactListRepository.allExist(userId, input.listIds)) {
       res.status(400).json({
         error: {
           message: 'Uma ou mais listas informadas nao existem.'
@@ -178,7 +183,7 @@ export function updateContactController(
       return;
     }
 
-    const contact = contactRepository.update(id, input);
+    const contact = contactRepository.update(userId, id, input);
 
     if (!contact) {
       res.status(404).json({
@@ -203,6 +208,7 @@ export function deleteContactController(
   next: NextFunction
 ): void {
   try {
+    const userId = getAuthenticatedUserId(req);
     const id = Number.parseInt(req.params.id, 10);
 
     if (!Number.isInteger(id) || id <= 0) {
@@ -214,7 +220,7 @@ export function deleteContactController(
       return;
     }
 
-    if (!contactRepository.delete(id)) {
+    if (!contactRepository.delete(userId, id)) {
       res.status(404).json({
         error: {
           message: 'Contato nao encontrado.'

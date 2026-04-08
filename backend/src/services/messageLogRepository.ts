@@ -4,6 +4,7 @@ export type MessageLogStatus = 'sent' | 'failed';
 export type MessageSendMode = 'manual' | 'contact' | 'batch';
 
 export type CreateMessageLogInput = {
+  userId: number;
   destinationNumber: string;
   content: string;
   sentAt: string;
@@ -51,6 +52,7 @@ class MessageLogRepository {
   create(input: CreateMessageLogInput): number {
     const statement = database.prepare(`
       INSERT INTO message_logs (
+        user_id,
         destination_number,
         content,
         sent_at,
@@ -59,10 +61,11 @@ class MessageLogRepository {
         contact_id,
         batch_id,
         send_mode
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const result = statement.run(
+      input.userId,
       input.destinationNumber,
       input.content,
       input.sentAt,
@@ -91,16 +94,16 @@ class MessageLogRepository {
     return messageLogId;
   }
 
-  listRecent(limit = 10): MessageLogRecord[] {
-    return this.list({
+  listRecent(userId: number, limit = 10): MessageLogRecord[] {
+    return this.list(userId, {
       limit
     });
   }
 
-  list(filters: MessageFilters = {}): MessageLogRecord[] {
+  list(userId: number, filters: MessageFilters = {}): MessageLogRecord[] {
     const limit = Math.min(Math.max(filters.limit ?? 50, 1), 200);
-    const where: string[] = [];
-    const params: Array<number | string> = [];
+    const where: string[] = ['ml.user_id = ?'];
+    const params: Array<number | string> = [userId];
 
     if (filters.status) {
       where.push('ml.status = ?');
@@ -117,8 +120,11 @@ class MessageLogRepository {
         EXISTS (
           SELECT 1
           FROM message_log_lists mll_filter
+          INNER JOIN contact_lists cl_filter
+            ON cl_filter.id = mll_filter.list_id
           WHERE mll_filter.message_log_id = ml.id
             AND mll_filter.list_id = ?
+            AND cl_filter.user_id = ml.user_id
         )
       `);
       params.push(filters.listId);
@@ -153,11 +159,13 @@ class MessageLogRepository {
       FROM message_logs ml
       LEFT JOIN contacts c
         ON c.id = ml.contact_id
+       AND c.user_id = ml.user_id
       LEFT JOIN message_log_lists mll
         ON mll.message_log_id = ml.id
       LEFT JOIN contact_lists cl
         ON cl.id = mll.list_id
-      ${where.length > 0 ? `WHERE ${where.join(' AND ')}` : ''}
+       AND cl.user_id = ml.user_id
+      WHERE ${where.join(' AND ')}
       GROUP BY ml.id
       ORDER BY ml.sent_at DESC, ml.id DESC
       LIMIT ?
@@ -194,19 +202,20 @@ class MessageLogRepository {
     }));
   }
 
-  createBatch(content: string, totalTargets: number): MessageBatchRecord {
+  createBatch(userId: number, content: string, totalTargets: number): MessageBatchRecord {
     const createdAt = new Date().toISOString();
     const statement = database.prepare(`
       INSERT INTO message_batches (
+        user_id,
         content,
         created_at,
         total_targets,
         success_count,
         failed_count
-      ) VALUES (?, ?, ?, 0, 0)
+      ) VALUES (?, ?, ?, ?, 0, 0)
     `);
 
-    const result = statement.run(content, createdAt, totalTargets);
+    const result = statement.run(userId, content, createdAt, totalTargets);
     return {
       id: Number(result.lastInsertRowid),
       content,
@@ -217,16 +226,17 @@ class MessageLogRepository {
     };
   }
 
-  updateBatchCounts(id: number, successCount: number, failedCount: number): void {
+  updateBatchCounts(userId: number, id: number, successCount: number, failedCount: number): void {
     const statement = database.prepare(`
       UPDATE message_batches
       SET
         success_count = ?,
         failed_count = ?
       WHERE id = ?
+        AND user_id = ?
     `);
 
-    statement.run(successCount, failedCount, id);
+    statement.run(successCount, failedCount, id, userId);
   }
 
   private parseIdList(value: string | null): number[] {

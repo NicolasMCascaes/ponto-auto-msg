@@ -168,7 +168,7 @@ function parseApiPayload(raw: string): { error?: { message?: string } } {
     return JSON.parse(raw) as { error?: { message?: string } };
   } catch {
     throw new Error(
-      'A resposta da API veio em formato invalido. Verifique a VITE_API_BASE_URL e o deploy do backend.'
+      'A resposta da API veio em formato inválido. Verifique a VITE_API_BASE_URL e o deploy do backend.'
     );
   }
 }
@@ -203,7 +203,7 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
       unauthorizedHandler();
     }
 
-    throw new Error(payload.error?.message ?? 'Falha na requisicao.');
+    throw new Error(payload.error?.message ?? 'Falha na requisição.');
   }
 
   return payload as T;

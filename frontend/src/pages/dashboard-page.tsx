@@ -19,7 +19,9 @@ import {
 } from '@/lib/formatters';
 import { useAppData } from '@/providers/app-data-provider';
 
-function getDashboardStatusLabel(state: 'idle' | 'connecting' | 'connected' | 'disconnected' | 'error' | undefined) {
+function getDashboardStatusLabel(
+  state: 'idle' | 'connecting' | 'connected' | 'disconnected' | 'error' | undefined
+) {
   switch (state) {
     case 'connected':
       return 'Online';

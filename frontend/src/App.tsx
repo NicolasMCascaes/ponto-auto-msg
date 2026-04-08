@@ -27,11 +27,11 @@ import { useAuth } from '@/providers/auth-provider';
 
 const routeTitles: Record<string, string> = {
   '/': 'Painel',
-  '/session': 'Conexao do WhatsApp',
+  '/session': 'Conexão do WhatsApp',
   '/contacts': 'Agenda',
   '/lists': 'Listas',
   '/send': 'Envios',
-  '/history': 'Historico'
+  '/history': 'Histórico'
 };
 
 function AppBootScreen() {
@@ -67,7 +67,7 @@ function ProtectedAppLayout() {
 
   function handleLogout() {
     logout();
-    toast.success('Sessao encerrada com sucesso.');
+    toast.success('Sessão encerrada com sucesso.');
   }
 
   return (
@@ -85,7 +85,7 @@ function ProtectedAppLayout() {
                   {routeTitles[location.pathname] ?? 'Ponto Auto Msg'}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Conecte, organize e acompanhe seus envios em um so lugar.
+                  Conecte, organize e acompanhe seus envios em um só lugar.
                 </p>
               </div>
             </div>
@@ -102,7 +102,7 @@ function ProtectedAppLayout() {
                 variant={status?.isConnected ? 'default' : 'secondary'}
                 className="rounded-full px-3 py-1"
               >
-                {status?.isConnected ? 'WhatsApp online' : 'Conexao pendente'}
+                {status?.isConnected ? 'WhatsApp online' : 'Conexão pendente'}
               </Badge>
 
               <Button variant="outline" size="sm" onClick={handleLogout}>

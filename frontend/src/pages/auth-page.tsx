@@ -63,7 +63,7 @@ export function AuthPage() {
 
   function validateCredentials(email: string, password: string) {
     if (!isValidEmail(email.trim().toLowerCase())) {
-      return 'Informe um e-mail valido.';
+      return 'Informe um e-mail válido.';
     }
 
     if (password.trim().length < 8) {
@@ -93,7 +93,7 @@ export function AuthPage() {
       toast.success('Acesso liberado com sucesso.');
       navigate(redirectTarget, { replace: true });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nao foi possivel entrar agora.';
+      const message = error instanceof Error ? error.message : 'Não foi possível entrar agora.';
       setErrorMessage(message);
       toast.error(message);
     } finally {
@@ -115,7 +115,7 @@ export function AuthPage() {
     }
 
     if (registerForm.confirmPassword !== password) {
-      setErrorMessage('A confirmacao de senha precisa ser igual a senha informada.');
+      setErrorMessage('A confirmação de senha precisa ser igual à senha informada.');
       return;
     }
 
@@ -126,7 +126,7 @@ export function AuthPage() {
       toast.success('Conta criada. Bem-vindo ao painel.');
       navigate(redirectTarget, { replace: true });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nao foi possivel criar sua conta.';
+      const message = error instanceof Error ? error.message : 'Não foi possível criar sua conta.';
       setErrorMessage(message);
       toast.error(message);
     } finally {
@@ -147,23 +147,23 @@ export function AuthPage() {
                 Ponto Auto Msg
               </p>
               <p className="mt-3 max-w-md text-4xl font-semibold tracking-tight text-foreground">
-                Centralize sua operacao de mensagens com mais controle desde o primeiro acesso.
+                Organize sua rotina de mensagens com mais clareza desde o primeiro acesso.
               </p>
             </div>
 
             <Badge className="rounded-full px-3 py-1">
               <SparklesIcon className="size-4" />
-              Workspace privado
+              Acesso da equipe
             </Badge>
           </div>
 
           <div className="relative grid gap-5">
             <Card className="border-border/70 bg-card/85 shadow-xl backdrop-blur-sm">
               <CardHeader className="border-b border-border/60">
-                <CardTitle className="text-xl">Antes de entrar</CardTitle>
+                <CardTitle className="text-xl">O que você encontra aqui</CardTitle>
                 <CardDescription>
-                  Seu painel continua pronto para QR Code, agenda, listas e historico. Agora com
-                  acesso autenticado para organizar tudo com mais seguranca.
+                  Seu painel já está pronto para conectar o WhatsApp, organizar contatos e
+                  acompanhar cada envio com mais tranquilidade.
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-4">
@@ -172,9 +172,10 @@ export function AuthPage() {
                     <ShieldCheckIcon className="size-5" />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <p className="font-medium">Acesso protegido por token</p>
+                    <p className="font-medium">Tudo salvo no seu espaço</p>
                     <p className="text-sm leading-6 text-muted-foreground">
-                      O backend valida sua sessao com JWT e mantem as credenciais fora do navegador.
+                      Entre com sua conta e retome sua operação de onde parou, com agenda, listas e
+                      histórico no mesmo lugar.
                     </p>
                   </div>
                 </div>
@@ -184,10 +185,10 @@ export function AuthPage() {
                     <MessageCircleMoreIcon className="size-5" />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <p className="font-medium">Fluxo pronto para operar</p>
+                    <p className="font-medium">Fluxo simples para o dia a dia</p>
                     <p className="text-sm leading-6 text-muted-foreground">
-                      Conecte o WhatsApp, cadastre destinos e acompanhe seus envios em um unico
-                      lugar.
+                      Conecte o WhatsApp, monte seus públicos e envie mensagens com acompanhamento
+                      claro.
                     </p>
                   </div>
                 </div>
@@ -198,21 +199,21 @@ export function AuthPage() {
               <Card className="border-border/60 bg-card/80">
                 <CardHeader>
                   <CardTitle className="text-3xl">1</CardTitle>
-                  <CardDescription>Cadastro ou login em poucos segundos.</CardDescription>
+                  <CardDescription>Crie sua conta ou entre em instantes.</CardDescription>
                 </CardHeader>
               </Card>
 
               <Card className="border-border/60 bg-card/80">
                 <CardHeader>
                   <CardTitle className="text-3xl">QR</CardTitle>
-                  <CardDescription>Conexao do WhatsApp direto pelo painel.</CardDescription>
+                  <CardDescription>Conexão do WhatsApp direto no painel.</CardDescription>
                 </CardHeader>
               </Card>
 
               <Card className="border-border/60 bg-card/80">
                 <CardHeader>
                   <CardTitle className="text-3xl">24h</CardTitle>
-                  <CardDescription>Historico e operacao sempre a um clique.</CardDescription>
+                  <CardDescription>Histórico e operação sempre à mão.</CardDescription>
                 </CardHeader>
               </Card>
             </div>
@@ -232,19 +233,19 @@ export function AuthPage() {
               </div>
 
               <Badge variant="secondary" className="rounded-full px-3 py-1">
-                Autenticacao
+                Acesso
               </Badge>
             </div>
 
             <Card className="border-border/70 bg-card/95 shadow-2xl backdrop-blur-sm">
               <CardHeader className="border-b border-border/60">
                 <Badge variant="secondary" className="w-fit rounded-full px-3 py-1">
-                  Acesso ao painel
+                  Seu painel
                 </Badge>
-                <CardTitle className="text-3xl tracking-tight">Login e registro</CardTitle>
+                <CardTitle className="text-3xl tracking-tight">Entre no seu painel</CardTitle>
                 <CardDescription className="max-w-lg leading-6">
-                  Use seu e-mail e senha para entrar no workspace, conectar sua sessao e gerenciar
-                  contatos, listas e envios com mais tranquilidade.
+                  Use seu e-mail e senha para acessar sua rotina, conectar o WhatsApp e acompanhar
+                  contatos, listas e envios com mais facilidade.
                 </CardDescription>
               </CardHeader>
 
@@ -283,7 +284,7 @@ export function AuthPage() {
                             id="login-password"
                             type="password"
                             autoComplete="current-password"
-                            placeholder="Sua senha segura"
+                            placeholder="Sua senha"
                             value={loginForm.password}
                             onChange={(event) =>
                               setLoginForm((current) => ({
@@ -389,10 +390,10 @@ export function AuthPage() {
                 </Tabs>
 
                 <div className="rounded-2xl border border-border/70 bg-muted/40 px-4 py-4">
-                  <p className="text-sm font-medium text-foreground">Acesso simples, base pronta</p>
+                  <p className="text-sm font-medium text-foreground">Tudo pronto para começar</p>
                   <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    O login usa e-mail, senha criptografada e token JWT. A interface do painel
-                    continua igual depois da autenticacao.
+                    Depois do acesso, você entra direto no painel para conectar seu número,
+                    organizar contatos e acompanhar a operação.
                   </p>
                 </div>
               </CardContent>

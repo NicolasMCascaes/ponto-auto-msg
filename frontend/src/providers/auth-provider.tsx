@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (now - lastUnauthorizedToastAtRef.current > 2_000) {
         lastUnauthorizedToastAtRef.current = now;
-        toast.error('Sua sessao expirou. Faca login novamente.');
+        toast.error('Sua sessão expirou. Faça login novamente.');
       }
 
       clearSession();

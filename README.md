@@ -81,7 +81,7 @@ O backend agora inclui `backend/vercel.json` e um entrypoint serverless em `back
 4. Build Command: `npm run build`.
 5. Install Command: `npm install`.
 6. Nao defina Output Directory (funcoes serverless nao usam `dist` publico).
-7. Runtime da funcao: `nodejs22.x` (ja definido no `vercel.json`).
+7. Runtime da funcao: `nodejs22.x` (configure manualmente no painel da Vercel, se necessario).
 
 ### Variaveis de ambiente minimas
 

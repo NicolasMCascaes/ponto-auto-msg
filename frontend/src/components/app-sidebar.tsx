@@ -81,7 +81,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar variant="floating" collapsible="icon">
-      <SidebarHeader>
+      <SidebarHeader className="group-data-[collapsible=icon]:hidden">
         <div className="rounded-2xl border border-sidebar-border/70 bg-sidebar-primary px-3 py-4 text-sidebar-primary-foreground shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sidebar-primary-foreground/80">
             Ponto Auto Msg
@@ -130,9 +130,9 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarSeparator />
+      <SidebarSeparator className="group-data-[collapsible=icon]:hidden" />
 
-      <SidebarFooter>
+      <SidebarFooter className="group-data-[collapsible=icon]:hidden">
         <div className="rounded-2xl border border-sidebar-border/70 bg-sidebar-accent/70 p-3 text-sidebar-foreground">
           <div className="flex items-center justify-between gap-3">
             <div className="space-y-1">

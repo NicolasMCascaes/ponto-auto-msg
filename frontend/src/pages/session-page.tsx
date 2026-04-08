@@ -12,12 +12,12 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
-import { useAppData } from '@/providers/app-data-provider';
 import {
   formatDateTime,
   getConnectionBadgeVariant,
   getConnectionLabel
 } from '@/lib/formatters';
+import { useAppData } from '@/providers/app-data-provider';
 
 export function SessionPage() {
   const { status, connectWhatsapp, refreshStatus, resetWhatsapp } = useAppData();
@@ -65,9 +65,9 @@ export function SessionPage() {
 
     try {
       const payload = await connectWhatsapp();
-      toast.success(payload.message ?? 'Conexao iniciada. Leia o QR no celular.');
+      toast.success(payload.message ?? 'Conexão iniciada. Leia o QR Code no celular.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Falha ao iniciar a conexao.');
+      toast.error(error instanceof Error ? error.message : 'Falha ao iniciar a conexão.');
     } finally {
       setIsStarting(false);
     }
@@ -91,9 +91,9 @@ export function SessionPage() {
 
     try {
       const payload = await resetWhatsapp();
-      toast.success(payload.message ?? 'Sessao reiniciada.');
+      toast.success(payload.message ?? 'Sessão reiniciada.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Falha ao resetar a sessao.');
+      toast.error(error instanceof Error ? error.message : 'Falha ao reiniciar a sessão.');
     } finally {
       setIsResetting(false);
     }
@@ -102,22 +102,22 @@ export function SessionPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Sessao WhatsApp"
-        title="Controle completo da autenticacao"
-        description="Leia o QR, acompanhe reconexao automatica e reinicie a sessao quando precisar limpar o pairing."
+        eyebrow="WhatsApp"
+        title="Conecte e acompanhe sua sessão"
+        description="Leia o QR Code, acompanhe o status da conexão e reinicie a sessão sempre que precisar."
         actions={
           <>
             <Button onClick={() => void handleConnect()} disabled={status?.isConnected || isStarting}>
               <QrCodeIcon className="size-4" />
-              {isStarting ? 'Gerando QR...' : 'Conectar'}
+              {isStarting ? 'Gerando QR...' : 'Gerar QR Code'}
             </Button>
             <Button variant="outline" onClick={() => void handleRefresh()} disabled={isRefreshing}>
               <RefreshCwIcon className="size-4" />
-              {isRefreshing ? 'Atualizando...' : 'Atualizar'}
+              {isRefreshing ? 'Atualizando...' : 'Atualizar status'}
             </Button>
             <Button variant="outline" onClick={() => void handleReset()} disabled={isResetting}>
               <RotateCcwIcon className="size-4" />
-              {isResetting ? 'Reiniciando...' : 'Resetar'}
+              {isResetting ? 'Reiniciando...' : 'Reiniciar sessão'}
             </Button>
           </>
         }
@@ -126,7 +126,7 @@ export function SessionPage() {
       <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
         <Card className="border-border/70 bg-card/90 shadow-sm">
           <CardHeader>
-            <CardDescription>Estado atual</CardDescription>
+            <CardDescription>Status da conexão</CardDescription>
             <CardTitle className="flex flex-wrap items-center gap-3">
               {getConnectionLabel(status ?? undefined)}
               <Badge variant={getConnectionBadgeVariant(status ?? undefined)}>
@@ -138,25 +138,27 @@ export function SessionPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Conectado</p>
-                <p className="mt-2 text-lg font-semibold">{status?.isConnected ? 'Sim' : 'Nao'}</p>
+                <p className="mt-2 text-lg font-semibold">{status?.isConnected ? 'Sim' : 'Não'}</p>
               </div>
               <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Ultima leitura</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Última leitura</p>
                 <p className="mt-2 text-lg font-semibold">{formatDateTime(status?.lastUpdatedAt)}</p>
               </div>
               <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Codigo de desconexao</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Código de desconexão</p>
                 <p className="mt-2 text-lg font-semibold">{status?.lastDisconnectCode ?? 'Sem registro'}</p>
               </div>
               <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Reconexao automatica</p>
-                <p className="mt-2 text-lg font-semibold">{status?.reconnectScheduled ? 'Ativa' : 'Nao pendente'}</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Reconexão automática</p>
+                <p className="mt-2 text-lg font-semibold">
+                  {status?.reconnectScheduled ? 'Ativa' : 'Não pendente'}
+                </p>
               </div>
             </div>
 
             {status?.lastError ? (
               <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">
-                <p className="font-medium">Ultimo erro</p>
+                <p className="font-medium">Último erro</p>
                 <p className="mt-1 text-destructive/80">{status.lastError}</p>
               </div>
             ) : null}
@@ -168,16 +170,16 @@ export function SessionPage() {
             <CardDescription>QR Code</CardDescription>
             <CardTitle className="flex items-center gap-2">
               <SmartphoneIcon className="size-5 text-primary" />
-              Leia com o WhatsApp
+              Escaneie com o WhatsApp
             </CardTitle>
           </CardHeader>
           <CardContent>
             {status?.isConnected ? (
               <div className="grid min-h-[22rem] place-items-center rounded-3xl border border-border/70 bg-background/80 p-6 text-center">
                 <div className="space-y-2">
-                  <p className="text-lg font-semibold">Sessao conectada com sucesso</p>
+                  <p className="text-lg font-semibold">Tudo certo por aqui</p>
                   <p className="max-w-sm text-sm text-muted-foreground">
-                    O QR some automaticamente apos a autenticacao para evitar leitura de um codigo expirado.
+                    O QR Code desaparece automaticamente assim que a sessão é confirmada.
                   </p>
                 </div>
               </div>
@@ -191,17 +193,17 @@ export function SessionPage() {
                   />
                 </div>
                 <p className="text-center text-sm text-muted-foreground">
-                  Abra o WhatsApp no celular, entre em Dispositivos conectados e leia este codigo.
+                  Abra o WhatsApp no celular, entre em Dispositivos conectados e escaneie este código.
                 </p>
               </div>
             ) : (
               <div className="grid min-h-[22rem] place-items-center rounded-3xl border border-dashed border-border bg-background/80 p-6 text-center">
                 <div className="space-y-2">
                   <p className="text-lg font-semibold">
-                    {status?.state === 'connecting' ? 'Aguardando QR valido' : 'Nenhum QR ativo'}
+                    {status?.state === 'connecting' ? 'Preparando QR Code' : 'Nenhum QR Code disponível'}
                   </p>
                   <p className="max-w-sm text-sm text-muted-foreground">
-                    Inicie a conexao para gerar um QR code novo ou use o reset caso queira limpar a autenticacao atual.
+                    Gere um novo QR Code para conectar sua conta ou reinicie a sessão para começar do zero.
                   </p>
                 </div>
               </div>

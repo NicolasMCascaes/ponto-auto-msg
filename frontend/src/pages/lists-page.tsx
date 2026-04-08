@@ -2,11 +2,27 @@ import { useMemo, useState } from 'react';
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/page-header';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -109,8 +125,8 @@ export function ListsPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Listas"
-        title="Agrupe numeros por contexto"
-        description="Monte listas operacionais para reaproveitar os mesmos destinatarios em lotes futuros sem duplicar cadastros."
+        title="Organize públicos com listas"
+        description="Crie listas por equipe, unidade ou contexto para ganhar velocidade nos próximos envios."
         actions={
           <Button onClick={openCreateDialog}>
             <PlusIcon className="size-4" />
@@ -125,7 +141,7 @@ export function ListsPage() {
             <CardContent className="flex min-h-[16rem] flex-col items-center justify-center gap-2 text-center">
               <p className="text-lg font-semibold">Nenhuma lista criada ainda</p>
               <p className="max-w-md text-sm text-muted-foreground">
-                Crie listas para separar equipes, filiais, frentes ou qualquer agrupamento que voce use com frequencia.
+                Crie sua primeira lista para segmentar contatos e acelerar os próximos disparos.
               </p>
             </CardContent>
           </Card>
@@ -136,14 +152,17 @@ export function ListsPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="space-y-1">
                     <CardTitle>{list.name}</CardTitle>
-                    <CardDescription>{list.description ?? 'Sem descricao adicional.'}</CardDescription>
+                    <CardDescription>{list.description ?? 'Sem descrição adicional.'}</CardDescription>
                   </div>
                   <Badge variant="secondary">{mappedMembers.get(list.id) ?? list.memberCount} membro(s)</Badge>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="rounded-2xl border border-border/70 bg-background/70 p-4 text-sm text-muted-foreground">
-                  Atualizada em {new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(list.updatedAt))}
+                  Atualizada em{' '}
+                  {new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(
+                    new Date(list.updatedAt)
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" className="flex-1" onClick={() => openEditDialog(list.id)}>
@@ -166,7 +185,7 @@ export function ListsPage() {
           <DialogHeader>
             <DialogTitle>{editingId ? 'Editar lista' : 'Nova lista'}</DialogTitle>
             <DialogDescription>
-              Defina um nome claro e uma descricao curta para facilitar a selecao nos lotes.
+              Escolha um nome claro e uma descrição curta para encontrar esta lista com facilidade.
             </DialogDescription>
           </DialogHeader>
 
@@ -182,7 +201,7 @@ export function ListsPage() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="list-description">Descricao</Label>
+              <Label htmlFor="list-description">Descrição</Label>
               <Textarea
                 id="list-description"
                 value={draft.description}
@@ -199,7 +218,7 @@ export function ListsPage() {
               Cancelar
             </Button>
             <Button onClick={() => void handleSave()} disabled={isSaving}>
-              {isSaving ? 'Salvando...' : editingId ? 'Salvar alteracoes' : 'Criar lista'}
+              {isSaving ? 'Salvando...' : editingId ? 'Salvar alterações' : 'Criar lista'}
             </Button>
           </DialogFooter>
         </DialogContent>

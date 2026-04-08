@@ -12,12 +12,28 @@ import {
 } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAppData } from '@/providers/app-data-provider';
 import {
   formatDateTime,
   getConnectionBadgeVariant,
   getConnectionLabel
 } from '@/lib/formatters';
+import { useAppData } from '@/providers/app-data-provider';
+
+function getDashboardStatusLabel(state: 'idle' | 'connecting' | 'connected' | 'disconnected' | 'error' | undefined) {
+  switch (state) {
+    case 'connected':
+      return 'Online';
+    case 'connecting':
+      return 'Conectando';
+    case 'disconnected':
+      return 'Offline';
+    case 'error':
+      return 'Atenção';
+    case 'idle':
+    default:
+      return 'Pronto';
+  }
+}
 
 export function DashboardPage() {
   const navigate = useNavigate();
@@ -26,17 +42,17 @@ export function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Dashboard"
-        title="Visao geral da operacao"
-        description="Acompanhe o status da sessao, a agenda cadastrada e o movimento recente antes de partir para o envio."
+        eyebrow="Visão geral"
+        title="Tudo pronto para o próximo envio"
+        description="Acompanhe sua conexão, a base de contatos e a atividade recente antes de iniciar uma nova mensagem."
         actions={
           <>
             <Button onClick={() => navigate('/send')}>
-              Ir para envio
+              Novo envio
               <ArrowRightIcon className="size-4" />
             </Button>
             <Button variant="outline" onClick={() => navigate('/contacts')}>
-              Gerenciar contatos
+              Abrir agenda
             </Button>
           </>
         }
@@ -45,50 +61,52 @@ export function DashboardPage() {
       <div className="grid gap-4 xl:grid-cols-4">
         <Card className="border-border/70 bg-card/90 shadow-sm">
           <CardHeader className="pb-2">
-            <CardDescription>Sessao</CardDescription>
+            <CardDescription>WhatsApp</CardDescription>
             <CardTitle className="flex items-center justify-between gap-3 text-lg">
               {getConnectionLabel(status ?? undefined)}
               <RadioTowerIcon className="size-5 text-primary" />
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Badge variant={getConnectionBadgeVariant(status ?? undefined)}>{status?.state ?? 'idle'}</Badge>
+            <Badge variant={getConnectionBadgeVariant(status ?? undefined)}>
+              {getDashboardStatusLabel(status?.state)}
+            </Badge>
           </CardContent>
         </Card>
 
         <Card className="border-border/70 bg-card/90 shadow-sm">
           <CardHeader className="pb-2">
-            <CardDescription>Contatos cadastrados</CardDescription>
+            <CardDescription>Contatos na agenda</CardDescription>
             <CardTitle className="flex items-center justify-between gap-3 text-lg">
               {contacts.length}
               <UsersRoundIcon className="size-5 text-primary" />
             </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            Agenda central pronta para uso em envio individual ou em lote.
+            Sua base está pronta para envios individuais e em lote.
           </CardContent>
         </Card>
 
         <Card className="border-border/70 bg-card/90 shadow-sm">
           <CardHeader className="pb-2">
-            <CardDescription>Listas ativas</CardDescription>
+            <CardDescription>Listas disponíveis</CardDescription>
             <CardTitle className="flex items-center justify-between gap-3 text-lg">
               {lists.length}
               <MessageSquareIcon className="size-5 text-primary" />
             </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            Use listas para agrupar destinatarios e deduplicar o envio em lote.
+            Organize públicos por contexto e evite duplicidade nos lotes.
           </CardContent>
         </Card>
 
         <Card className="border-border/70 bg-card/90 shadow-sm">
           <CardHeader className="pb-2">
-            <CardDescription>Ultimos eventos</CardDescription>
+            <CardDescription>Atividade recente</CardDescription>
             <CardTitle className="text-lg">{recentMessages.length}</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            O dashboard mostra os envios mais recentes persistidos no SQLite.
+            Os envios mais recentes ficam sempre à mão para consulta rápida.
           </CardContent>
         </Card>
       </div>
@@ -96,28 +114,46 @@ export function DashboardPage() {
       <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
         <Card className="border-border/70 bg-card/90 shadow-sm">
           <CardHeader>
-            <CardDescription>Fluxos principais</CardDescription>
-            <CardTitle>Atalhos para o trabalho do dia</CardTitle>
+            <CardDescription>Acessos rápidos</CardDescription>
+            <CardTitle>Entre direto no que importa</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-3">
-            <Button variant="outline" className="h-auto justify-between rounded-2xl px-4 py-4" onClick={() => navigate('/session')}>
+            <Button
+              variant="outline"
+              className="h-auto justify-between rounded-2xl px-4 py-4"
+              onClick={() => navigate('/session')}
+            >
               <span className="text-left">
-                <span className="block text-sm font-medium">Sessao WhatsApp</span>
-                <span className="block text-xs text-muted-foreground">QR code, reset e reconexao</span>
+                <span className="block text-sm font-medium">Conexão do WhatsApp</span>
+                <span className="block text-xs text-muted-foreground">
+                  QR Code, atualização e reinício
+                </span>
               </span>
               <ArrowRightIcon className="size-4" />
             </Button>
-            <Button variant="outline" className="h-auto justify-between rounded-2xl px-4 py-4" onClick={() => navigate('/contacts')}>
+            <Button
+              variant="outline"
+              className="h-auto justify-between rounded-2xl px-4 py-4"
+              onClick={() => navigate('/contacts')}
+            >
               <span className="text-left">
-                <span className="block text-sm font-medium">Agenda de contatos</span>
-                <span className="block text-xs text-muted-foreground">Cadastro, busca e manutencao</span>
+                <span className="block text-sm font-medium">Agenda</span>
+                <span className="block text-xs text-muted-foreground">
+                  Cadastre, edite e organize contatos
+                </span>
               </span>
               <ArrowRightIcon className="size-4" />
             </Button>
-            <Button variant="outline" className="h-auto justify-between rounded-2xl px-4 py-4" onClick={() => navigate('/history')}>
+            <Button
+              variant="outline"
+              className="h-auto justify-between rounded-2xl px-4 py-4"
+              onClick={() => navigate('/history')}
+            >
               <span className="text-left">
-                <span className="block text-sm font-medium">Historico completo</span>
-                <span className="block text-xs text-muted-foreground">Filtros por contato, lista e status</span>
+                <span className="block text-sm font-medium">Histórico</span>
+                <span className="block text-xs text-muted-foreground">
+                  Consulte envios, falhas e filtros
+                </span>
               </span>
               <ArrowRightIcon className="size-4" />
             </Button>
@@ -126,8 +162,8 @@ export function DashboardPage() {
 
         <Card className="border-border/70 bg-card/90 shadow-sm">
           <CardHeader>
-            <CardDescription>Atividade recente</CardDescription>
-            <CardTitle>Ultimos envios registrados</CardTitle>
+            <CardDescription>Últimos registros</CardDescription>
+            <CardTitle>O que aconteceu por último</CardTitle>
           </CardHeader>
           <CardContent>
             {isBooting ? (

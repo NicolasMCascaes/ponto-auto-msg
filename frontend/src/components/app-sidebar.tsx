@@ -26,12 +26,12 @@ import { useAppData } from '@/providers/app-data-provider';
 
 const navigationItems = [
   {
-    title: 'Dashboard',
+    title: 'Painel',
     href: '/',
     icon: HomeIcon
   },
   {
-    title: 'Sessao WhatsApp',
+    title: 'WhatsApp',
     href: '/session',
     icon: SmartphoneIcon
   },
@@ -46,12 +46,12 @@ const navigationItems = [
     icon: BoxesIcon
   },
   {
-    title: 'Envio',
+    title: 'Envios',
     href: '/send',
     icon: SendIcon
   },
   {
-    title: 'Historico',
+    title: 'Histórico',
     href: '/history',
     icon: Clock3Icon
   }
@@ -62,13 +62,13 @@ function getStatusLabel(
 ) {
   switch (state) {
     case 'connected':
-      return 'Conectado';
+      return 'Online';
     case 'connecting':
       return 'Conectando';
     case 'disconnected':
-      return 'Desconectado';
+      return 'Offline';
     case 'error':
-      return 'Atencao';
+      return 'Atenção';
     case 'idle':
     default:
       return 'Pronto';
@@ -87,9 +87,9 @@ export function AppSidebar() {
             Ponto Auto Msg
           </p>
           <div className="mt-3 space-y-1">
-            <p className="text-lg font-semibold">Central de operacao</p>
+            <p className="text-lg font-semibold">Central de mensagens</p>
             <p className="text-sm text-sidebar-primary-foreground/80">
-              WhatsApp, agenda, listas e historico em um unico fluxo.
+              WhatsApp, contatos, listas e histórico em uma experiência única.
             </p>
           </div>
         </div>
@@ -97,7 +97,7 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navegacao</SidebarGroupLabel>
+          <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map((item) => (
@@ -111,10 +111,7 @@ export function AppSidebar() {
                         : location.pathname.startsWith(item.href)
                     }
                   >
-                    <NavLink
-                      end={item.href === '/'}
-                      to={item.href}
-                    >
+                    <NavLink end={item.href === '/'} to={item.href}>
                       <item.icon />
                       <span>{item.title}</span>
                     </NavLink>
@@ -139,7 +136,7 @@ export function AppSidebar() {
         <div className="rounded-2xl border border-sidebar-border/70 bg-sidebar-accent/70 p-3 text-sidebar-foreground">
           <div className="flex items-center justify-between gap-3">
             <div className="space-y-1">
-              <p className="text-sm font-medium">Sessao atual</p>
+              <p className="text-sm font-medium">Status da sessão</p>
               <p className="text-xs text-sidebar-foreground/70">
                 {status?.lastUpdatedAt
                   ? new Intl.DateTimeFormat('pt-BR', {

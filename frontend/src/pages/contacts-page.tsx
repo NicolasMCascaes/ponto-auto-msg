@@ -2,7 +2,16 @@ import { useDeferredValue, useMemo, useState } from 'react';
 import { PencilIcon, PlusIcon, SearchIcon, Trash2Icon } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/page-header';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +20,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle
+} from '@/components/ui/sheet';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppData } from '@/providers/app-data-provider';
@@ -144,8 +160,8 @@ export function ContactsPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Contatos"
-        title="Agenda persistida em SQLite"
-        description="Cadastre destinatarios, mantenha observacoes internas e associe cada contato a uma ou mais listas reutilizaveis."
+        title="Sua agenda de contatos"
+        description="Cadastre contatos, adicione observações internas e organize tudo em listas reutilizáveis."
         actions={
           <Button onClick={openCreateSheet}>
             <PlusIcon className="size-4" />
@@ -156,14 +172,14 @@ export function ContactsPage() {
 
       <Card className="border-border/70 bg-card/90 shadow-sm">
         <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <CardTitle className="text-lg">Base de contatos</CardTitle>
+          <CardTitle className="text-lg">Contatos salvos</CardTitle>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="relative min-w-[16rem]">
               <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Buscar por nome, numero ou observacao"
+                placeholder="Buscar por nome, número ou observação"
                 className="pl-9"
               />
             </div>
@@ -201,10 +217,10 @@ export function ContactsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Contato</TableHead>
-                  <TableHead>Numero</TableHead>
+                  <TableHead>Número</TableHead>
                   <TableHead>Listas</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Acoes</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -220,7 +236,9 @@ export function ContactsPage() {
                       <TableCell>
                         <div className="space-y-1">
                           <p className="font-medium text-foreground">{contact.name}</p>
-                          <p className="text-xs text-muted-foreground">{contact.notes || 'Sem observacoes internas.'}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {contact.notes || 'Sem observações internas.'}
+                          </p>
                         </div>
                       </TableCell>
                       <TableCell className="font-medium">{contact.number}</TableCell>
@@ -268,7 +286,7 @@ export function ContactsPage() {
           <SheetHeader>
             <SheetTitle>{editingId ? 'Editar contato' : 'Novo contato'}</SheetTitle>
             <SheetDescription>
-              Salve o destinatario uma vez e reutilize em envio individual ou em lote.
+              Cadastre uma vez e reutilize este contato sempre que precisar.
             </SheetDescription>
           </SheetHeader>
 
@@ -279,12 +297,12 @@ export function ContactsPage() {
                 id="contact-name"
                 value={draft.name}
                 onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
-                placeholder="Ex.: Operacao Sao Paulo"
+                placeholder="Ex.: Operação São Paulo"
               />
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="contact-number">Numero</Label>
+              <Label htmlFor="contact-number">Número</Label>
               <Input
                 id="contact-number"
                 value={draft.number}
@@ -294,12 +312,12 @@ export function ContactsPage() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="contact-notes">Observacoes</Label>
+              <Label htmlFor="contact-notes">Observações</Label>
               <Textarea
                 id="contact-notes"
                 value={draft.notes}
                 onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))}
-                placeholder="Informacoes internas sobre o contato."
+                placeholder="Informações internas sobre o contato."
               />
             </div>
 
@@ -314,7 +332,7 @@ export function ContactsPage() {
               <div className="space-y-1">
                 <Label htmlFor="contact-active">Contato ativo</Label>
                 <p className="text-xs text-muted-foreground">
-                  Apenas contatos ativos entram no envio por listas e lotes.
+                  Apenas contatos ativos aparecem nos envios por lista e em lote.
                 </p>
               </div>
             </div>
@@ -323,7 +341,7 @@ export function ContactsPage() {
               <div>
                 <Label>Listas vinculadas</Label>
                 <p className="text-xs text-muted-foreground">
-                  Um contato pode pertencer a varias listas ao mesmo tempo.
+                  Um contato pode pertencer a várias listas ao mesmo tempo.
                 </p>
               </div>
 
@@ -363,7 +381,7 @@ export function ContactsPage() {
               Cancelar
             </Button>
             <Button onClick={() => void handleSave()} disabled={isSaving}>
-              {isSaving ? 'Salvando...' : editingId ? 'Salvar alteracoes' : 'Criar contato'}
+              {isSaving ? 'Salvando...' : editingId ? 'Salvar alterações' : 'Criar contato'}
             </Button>
           </SheetFooter>
         </SheetContent>
@@ -374,7 +392,7 @@ export function ContactsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir contato?</AlertDialogTitle>
             <AlertDialogDescription>
-              Essa acao remove o contato da agenda e de todas as listas associadas.
+              Essa ação remove o contato da agenda e de todas as listas associadas.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -2,7 +2,16 @@ import { useMemo, useState } from 'react';
 import { AlertTriangleIcon, MessageCircleIcon, SendHorizonalIcon, UsersIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/page-header';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,8 +22,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { useAppData } from '@/providers/app-data-provider';
 import { normalizeNumberPreview } from '@/lib/formatters';
+import { useAppData } from '@/providers/app-data-provider';
 
 export function SendPage() {
   const { contacts, lists, status, sendBatch, sendSingle } = useAppData();
@@ -77,13 +86,13 @@ export function SendPage() {
           contactId: parsedContactId,
           text: singleText
         });
-        toast.success(payload.message ?? 'Mensagem enviada com sucesso.');
+        toast.success(payload.message ?? 'Mensagem enviada.');
       } else {
         const payload = await sendSingle({
           number: manualNumber,
           text: singleText
         });
-        toast.success(payload.message ?? 'Mensagem enviada com sucesso.');
+        toast.success(payload.message ?? 'Mensagem enviada.');
       }
 
       setSingleText('');
@@ -109,7 +118,7 @@ export function SendPage() {
 
       toast.success(
         payload.message ??
-          `Lote concluido. ${payload.data.successCount} enviado(s), ${payload.data.failedCount} falha(s).`
+          `Lote concluído. ${payload.data.successCount} enviado(s), ${payload.data.failedCount} falha(s).`
       );
       setBatchText('');
       setSelectedContactIds([]);
@@ -126,8 +135,8 @@ export function SendPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Envio"
-        title="Disparo individual ou em lote"
-        description="Escolha um contato salvo, informe um numero avulso ou monte um lote com contatos e listas ao mesmo tempo."
+        title="Envie mensagens com confiança"
+        description="Escolha um contato da agenda, informe um número avulso ou monte um envio em lote em poucos passos."
       />
 
       {!status?.isConnected ? (
@@ -135,9 +144,9 @@ export function SendPage() {
           <CardContent className="flex items-start gap-3 p-5 text-sm text-destructive">
             <AlertTriangleIcon className="mt-0.5 size-5 shrink-0" />
             <div>
-              <p className="font-medium">Sessao WhatsApp desconectada</p>
+              <p className="font-medium">WhatsApp ainda não está conectado</p>
               <p className="mt-1 text-destructive/80">
-                Conecte a sessao na aba correspondente antes de tentar enviar mensagens.
+                Conecte sua sessão antes de iniciar novos envios.
               </p>
             </div>
           </CardContent>
@@ -159,14 +168,14 @@ export function SendPage() {
               </CardHeader>
               <CardContent className="space-y-5">
                 <div className="grid gap-2">
-                  <Label>Modo de destino</Label>
+                  <Label>Como você quer enviar?</Label>
                   <Select value={singleMode} onValueChange={(value) => setSingleMode(value as typeof singleMode)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="contact">Contato salvo</SelectItem>
-                      <SelectItem value="manual">Numero avulso</SelectItem>
+                      <SelectItem value="manual">Número avulso</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -190,7 +199,7 @@ export function SendPage() {
                   </div>
                 ) : (
                   <div className="grid gap-2">
-                    <Label htmlFor="manual-number">Numero avulso</Label>
+                    <Label htmlFor="manual-number">Número avulso</Label>
                     <Input
                       id="manual-number"
                       value={manualNumber}
@@ -205,8 +214,8 @@ export function SendPage() {
 
                 <div className="rounded-2xl border border-border/70 bg-background/70 p-4 text-sm text-muted-foreground">
                   {singleMode === 'contact'
-                    ? 'O envio usa um contato ja salvo na agenda e reaproveita os mesmos dados no historico.'
-                    : 'O envio avulso nao cria contato automaticamente. Use a agenda quando quiser reutilizar o numero.'}
+                    ? 'Use um contato já salvo para manter seu histórico organizado e reutilizar dados com facilidade.'
+                    : 'O envio avulso é ideal para mensagens rápidas. Se quiser reutilizar esse número depois, salve-o na agenda.'}
                 </div>
               </CardContent>
             </Card>
@@ -214,7 +223,7 @@ export function SendPage() {
             <Card className="border-border/70 bg-card/90 shadow-sm">
               <CardHeader>
                 <CardDescription>Mensagem</CardDescription>
-                <CardTitle>Composer individual</CardTitle>
+                <CardTitle>Escreva sua mensagem</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-2">
@@ -247,13 +256,13 @@ export function SendPage() {
           <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
             <Card className="border-border/70 bg-card/90 shadow-sm">
               <CardHeader>
-                <CardDescription>Destinatarios</CardDescription>
-                <CardTitle>Monte o lote</CardTitle>
+                <CardDescription>Destinatários</CardDescription>
+                <CardTitle>Monte seu lote</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-4 lg:grid-cols-2">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label>Contatos ativos</Label>
+                    <Label>Contatos disponíveis</Label>
                     <Badge variant="secondary">{selectedContactIds.length} selecionado(s)</Badge>
                   </div>
                   <ScrollArea className="h-72 rounded-2xl border border-border/70 bg-background/70 p-4">
@@ -311,7 +320,7 @@ export function SendPage() {
             <Card className="border-border/70 bg-card/90 shadow-sm">
               <CardHeader>
                 <CardDescription>Resumo do lote</CardDescription>
-                <CardTitle>Composer em lote</CardTitle>
+                <CardTitle>Revise antes de enviar</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-3 sm:grid-cols-3">
@@ -335,7 +344,7 @@ export function SendPage() {
                     id="batch-text"
                     value={batchText}
                     onChange={(event) => setBatchText(event.target.value)}
-                    placeholder="Escreva a mensagem que sera replicada para todos os destinos deduplicados."
+                    placeholder="Escreva a mensagem que será replicada para todos os destinos deduplicados."
                     className="min-h-44"
                     maxLength={500}
                   />
@@ -358,7 +367,7 @@ export function SendPage() {
                   onClick={() => setIsBatchConfirmOpen(true)}
                 >
                   <MessageCircleIcon className="size-4" />
-                  Revisar e enviar lote
+                  Revisar envio
                 </Button>
               </CardContent>
             </Card>
@@ -371,7 +380,7 @@ export function SendPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar envio em lote?</AlertDialogTitle>
             <AlertDialogDescription>
-              Este lote sera enviado para {batchTargets.length} contato(s) deduplicado(s).
+              Esta mensagem será enviada para {batchTargets.length} contato(s) únicos.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -9,21 +9,21 @@ import {
   SidebarTrigger
 } from '@/components/ui/sidebar';
 import { Toaster } from '@/components/ui/sonner';
+import { ContactsPage } from '@/pages/contacts-page';
 import { DashboardPage } from '@/pages/dashboard-page';
 import { HistoryPage } from '@/pages/history-page';
-import { ContactsPage } from '@/pages/contacts-page';
 import { ListsPage } from '@/pages/lists-page';
 import { SendPage } from '@/pages/send-page';
 import { SessionPage } from '@/pages/session-page';
 import { useAppData } from '@/providers/app-data-provider';
 
 const routeTitles: Record<string, string> = {
-  '/': 'Painel principal',
-  '/session': 'Controle da sessao',
-  '/contacts': 'Agenda de contatos',
-  '/lists': 'Listas e agrupamentos',
-  '/send': 'Central de envio',
-  '/history': 'Historico'
+  '/': 'Painel',
+  '/session': 'Conexão do WhatsApp',
+  '/contacts': 'Agenda',
+  '/lists': 'Listas',
+  '/send': 'Envios',
+  '/history': 'Histórico'
 };
 
 function AppLayout() {
@@ -45,13 +45,13 @@ function AppLayout() {
                   {routeTitles[location.pathname] ?? 'Ponto Auto Msg'}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Fluxo unificado com shadcn, agenda e historico persistido.
+                  Conecte, organize e acompanhe seus envios em um só lugar.
                 </p>
               </div>
             </div>
 
             <Badge variant={status?.isConnected ? 'default' : 'secondary'} className="rounded-full px-3 py-1">
-              {status?.isConnected ? 'WhatsApp conectado' : 'Sessao pendente'}
+              {status?.isConnected ? 'WhatsApp online' : 'Conexão pendente'}
             </Badge>
           </div>
         </div>

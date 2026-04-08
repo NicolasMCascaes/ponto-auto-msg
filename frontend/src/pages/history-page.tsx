@@ -22,7 +22,7 @@ function getSendModeLabel(mode: MessageLog['sendMode']) {
       return 'Contato salvo';
     case 'manual':
     default:
-      return 'Numero avulso';
+      return 'Número avulso';
   }
 }
 
@@ -54,7 +54,7 @@ export function HistoryPage() {
       })
       .catch((error) => {
         if (isMounted) {
-          toast.error(error instanceof Error ? error.message : 'Falha ao carregar historico.');
+          toast.error(error instanceof Error ? error.message : 'Falha ao carregar histórico.');
         }
       })
       .finally(() => {
@@ -81,9 +81,9 @@ export function HistoryPage() {
       });
 
       setMessages(data);
-      toast.success('Historico atualizado.');
+      toast.success('Histórico atualizado.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Falha ao atualizar historico.');
+      toast.error(error instanceof Error ? error.message : 'Falha ao atualizar histórico.');
     } finally {
       setIsLoading(false);
     }
@@ -92,13 +92,13 @@ export function HistoryPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Historico"
-        title="Linha do tempo completa de envios"
-        description="Filtre por contato, lista, status ou texto para revisar tudo o que foi enviado e os erros retornados pelo backend."
+        eyebrow="Histórico"
+        title="Acompanhe cada envio"
+        description="Filtre por contato, lista, status ou texto e encontre rapidamente tudo o que já foi enviado."
         actions={
           <Button variant="outline" onClick={() => void handleRefresh()}>
             <RefreshCwIcon className="size-4" />
-            Atualizar historico
+            Atualizar dados
           </Button>
         }
       />
@@ -113,7 +113,7 @@ export function HistoryPage() {
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar por contato, numero ou texto"
+              placeholder="Buscar por contato, número ou texto"
             />
 
             <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}>
@@ -222,7 +222,7 @@ export function HistoryPage() {
                           <div className="space-y-1">
                             <p className="line-clamp-2 text-sm text-foreground">{message.content}</p>
                             <p className="text-xs text-muted-foreground">
-                              {message.errorMessage ?? 'Sem erros registrados'}
+                              {message.errorMessage ?? 'Sem erro registrado'}
                             </p>
                           </div>
                         </TableCell>

@@ -2,7 +2,7 @@ import type { ConnectionStatus } from '@/lib/api';
 
 export function formatDateTime(value?: string) {
   if (!value) {
-    return 'Sem atualizacao';
+    return 'Sem atualização';
   }
 
   return new Intl.DateTimeFormat('pt-BR', {
@@ -36,15 +36,15 @@ export function getConnectionBadgeVariant(
 export function getConnectionLabel(status?: ConnectionStatus) {
   switch (status?.state) {
     case 'connected':
-      return 'Sessao ativa';
+      return 'WhatsApp pronto';
     case 'connecting':
-      return status.reconnectScheduled ? 'Reconectando' : 'Aguardando leitura';
+      return status.reconnectScheduled ? 'Reconectando' : 'Aguardando QR Code';
     case 'disconnected':
       return 'Desconectado';
     case 'error':
-      return 'Requer atencao';
+      return 'Verifique a sessão';
     case 'idle':
     default:
-      return 'Pronto para iniciar';
+      return 'Pronto para conectar';
   }
 }

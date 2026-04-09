@@ -79,7 +79,7 @@ function ProtectedAppLayout() {
       <SidebarRail />
       <SidebarInset className="bg-transparent">
         <div className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-          <div className="mx-auto flex w-full max-w-[1680px] items-center justify-between gap-4 px-4 py-3 lg:px-6">
+          <div className="mx-auto flex w-full max-w-420 items-center justify-between gap-4 px-4 py-3 lg:px-6">
             <div className="flex items-center gap-3">
               <SidebarTrigger />
               <Separator orientation="vertical" className="hidden h-5 sm:block" />
@@ -116,7 +116,7 @@ function ProtectedAppLayout() {
           </div>
         </div>
 
-        <div className="mx-auto flex w-full max-w-[1680px] flex-1 flex-col px-4 py-6 lg:px-6">
+        <div className="mx-auto flex w-full max-w-420 flex-1 flex-col px-4 py-6 lg:px-6">
           <Routes>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/session" element={<SessionPage />} />

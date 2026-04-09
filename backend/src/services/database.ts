@@ -163,6 +163,27 @@ function createUserScopedSchema(): void {
   `);
 }
 
+function createMessageTemplatesTable(): void {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS message_templates (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      group_type TEXT NOT NULL CHECK (group_type IN ('teacher', 'staff')),
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_message_templates_user_id
+      ON message_templates(user_id);
+
+    CREATE INDEX IF NOT EXISTS idx_message_templates_user_group
+      ON message_templates(user_id, group_type);
+  `);
+}
+
 function getLegacyDataOwnerId(): number | null {
   const statement = database.prepare(`
     SELECT id
@@ -365,5 +386,6 @@ if (shouldMigrateLegacyGlobalData()) {
 }
 
 createUserScopedSchema();
+createMessageTemplatesTable();
 
 export { database };

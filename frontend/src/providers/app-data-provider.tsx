@@ -16,6 +16,8 @@ import {
   type ContactInput,
   type ContactListInput,
   type ContactListSummary,
+  type MessageTemplate,
+  type MessageTemplateInput,
   type MessageFilters,
   type MessageLog,
   type SendBatchInput,
@@ -27,12 +29,14 @@ type AppDataContextValue = {
   status: ConnectionStatus | null;
   contacts: Contact[];
   lists: ContactListSummary[];
+  messageTemplates: MessageTemplate[];
   recentMessages: MessageLog[];
   isBooting: boolean;
   refreshCoreData: (options?: { silent?: boolean }) => Promise<void>;
   refreshStatus: (options?: { silent?: boolean }) => Promise<void>;
   refreshContacts: (filters?: ContactFilters) => Promise<Contact[]>;
   refreshLists: () => Promise<ContactListSummary[]>;
+  refreshMessageTemplates: () => Promise<MessageTemplate[]>;
   refreshRecentMessages: (limit?: number) => Promise<MessageLog[]>;
   loadMessages: (filters?: MessageFilters) => Promise<MessageLog[]>;
   connectWhatsapp: () => Promise<{ message?: string; status?: ConnectionStatus }>;
@@ -43,6 +47,9 @@ type AppDataContextValue = {
   createList: (input: ContactListInput) => Promise<ContactListSummary>;
   updateList: (id: number, input: ContactListInput) => Promise<ContactListSummary>;
   deleteList: (id: number) => Promise<void>;
+  createMessageTemplate: (input: MessageTemplateInput) => Promise<MessageTemplate>;
+  updateMessageTemplate: (id: number, input: MessageTemplateInput) => Promise<MessageTemplate>;
+  deleteMessageTemplate: (id: number) => Promise<void>;
   sendSingle: (input: SendSingleInput) => Promise<{ message?: string }>;
   sendBatch: (input: SendBatchInput) => Promise<{ message?: string; data: SendBatchResult }>;
 };
@@ -57,6 +64,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<ConnectionStatus | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [lists, setLists] = useState<ContactListSummary[]>([]);
+  const [messageTemplates, setMessageTemplates] = useState<MessageTemplate[]>([]);
   const [recentMessages, setRecentMessages] = useState<MessageLog[]>([]);
   const [isBooting, setIsBooting] = useState(true);
 
@@ -91,6 +99,17 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     return nextLists;
   }, []);
 
+  const refreshMessageTemplates = useCallback(async () => {
+    const payload = await api.getMessageTemplates();
+    const nextTemplates = payload.data ?? [];
+
+    startTransition(() => {
+      setMessageTemplates(nextTemplates);
+    });
+
+    return nextTemplates;
+  }, []);
+
   const refreshRecentMessages = useCallback(async (limit = RECENT_MESSAGES_LIMIT) => {
     const payload = await api.getRecentMessages(limit);
     const nextMessages = payload.data ?? [];
@@ -110,8 +129,14 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshCoreData = useCallback(async () => {
-    await Promise.all([refreshStatus(), refreshContacts(), refreshLists(), refreshRecentMessages()]);
-  }, [refreshContacts, refreshLists, refreshRecentMessages, refreshStatus]);
+    await Promise.all([
+      refreshStatus(),
+      refreshContacts(),
+      refreshLists(),
+      refreshMessageTemplates(),
+      refreshRecentMessages()
+    ]);
+  }, [refreshContacts, refreshLists, refreshMessageTemplates, refreshRecentMessages, refreshStatus]);
 
   const connectWhatsapp = useCallback(async () => {
     const payload = await api.connectWhatsapp();
@@ -193,6 +218,32 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     [refreshContacts, refreshLists, refreshRecentMessages]
   );
 
+  const createMessageTemplate = useCallback(
+    async (input: MessageTemplateInput) => {
+      const payload = await api.createMessageTemplate(input);
+      await refreshMessageTemplates();
+      return payload.data;
+    },
+    [refreshMessageTemplates]
+  );
+
+  const updateMessageTemplate = useCallback(
+    async (id: number, input: MessageTemplateInput) => {
+      const payload = await api.updateMessageTemplate(id, input);
+      await refreshMessageTemplates();
+      return payload.data;
+    },
+    [refreshMessageTemplates]
+  );
+
+  const deleteMessageTemplate = useCallback(
+    async (id: number) => {
+      await api.deleteMessageTemplate(id);
+      await refreshMessageTemplates();
+    },
+    [refreshMessageTemplates]
+  );
+
   const sendSingle = useCallback(
     async (input: SendSingleInput) => {
       const payload = await api.sendMessage(input);
@@ -265,12 +316,14 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       status,
       contacts,
       lists,
+      messageTemplates,
       recentMessages,
       isBooting,
       refreshCoreData,
       refreshStatus,
       refreshContacts,
       refreshLists,
+      refreshMessageTemplates,
       refreshRecentMessages,
       loadMessages,
       connectWhatsapp,
@@ -281,6 +334,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       createList,
       updateList,
       deleteList,
+      createMessageTemplate,
+      updateMessageTemplate,
+      deleteMessageTemplate,
       sendSingle,
       sendBatch
     }),
@@ -289,15 +345,19 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       contacts,
       createContact,
       createList,
+      createMessageTemplate,
       deleteContact,
       deleteList,
+      deleteMessageTemplate,
       isBooting,
       lists,
       loadMessages,
+      messageTemplates,
       recentMessages,
       refreshContacts,
       refreshCoreData,
       refreshLists,
+      refreshMessageTemplates,
       refreshRecentMessages,
       refreshStatus,
       resetWhatsapp,
@@ -305,7 +365,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       sendSingle,
       status,
       updateContact,
-      updateList
+      updateList,
+      updateMessageTemplate
     ]
   );
 

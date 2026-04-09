@@ -29,6 +29,17 @@ export type Contact = {
   updatedAt: string;
 };
 
+export type MessageTemplateGroup = 'teacher' | 'staff';
+
+export type MessageTemplate = {
+  id: number;
+  group: MessageTemplateGroup;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type MessageLog = {
   id: number;
   destinationNumber: string;
@@ -71,6 +82,12 @@ export type ContactListInput = {
   description?: string;
 };
 
+export type MessageTemplateInput = {
+  group: MessageTemplateGroup;
+  title: string;
+  content: string;
+};
+
 export type SendSingleInput =
   | {
       text: string;
@@ -83,11 +100,19 @@ export type SendSingleInput =
       contactId: number;
     };
 
-export type SendBatchInput = {
-  text: string;
-  contactIds: number[];
-  listIds: number[];
-};
+export type SendBatchInput =
+  | {
+      mode: 'manual';
+      text: string;
+      contactIds: number[];
+      listIds: number[];
+    }
+  | {
+      mode: 'group-random';
+      contactIds: number[];
+      listIds: number[];
+      text?: never;
+    };
 
 export type SendBatchResult = {
   batchId: number;
@@ -292,6 +317,46 @@ export const api = {
   },
   getContactLists() {
     return requestJson<ApiEnvelope<ContactListSummary[]>>('/contact-lists');
+  },
+  getMessageTemplates() {
+    return requestJson<ApiEnvelope<MessageTemplate[]>>('/message-templates');
+  },
+  createMessageTemplate(input: MessageTemplateInput) {
+    return requestJson<ApiEnvelope<MessageTemplate>>('/message-templates', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(input)
+    });
+  },
+  updateMessageTemplate(id: number, input: MessageTemplateInput) {
+    return requestJson<ApiEnvelope<MessageTemplate>>(`/message-templates/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(input)
+    });
+  },
+  async deleteMessageTemplate(id: number) {
+    const response = await fetch(
+      buildApiUrl(`/message-templates/${id}`),
+      withDefaultHeaders({
+        method: 'DELETE'
+      })
+    );
+
+    if (!response.ok) {
+      const raw = await response.text();
+      const payload = parseApiPayload(raw);
+
+      if (response.status === 401 && unauthorizedHandler) {
+        unauthorizedHandler();
+      }
+
+      throw new Error(payload.error?.message ?? 'Falha ao excluir modelo de mensagem.');
+    }
   },
   createContactList(input: ContactListInput) {
     return requestJson<ApiEnvelope<ContactListSummary>>('/contact-lists', {

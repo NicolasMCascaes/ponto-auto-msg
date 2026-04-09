@@ -1,4 +1,8 @@
 import { database } from './database.js';
+import {
+  getMessageTemplateGroupFromNotes,
+  type MessageTemplateGroup
+} from '../utils/messageTemplates.js';
 
 export type ContactListReference = {
   id: number;
@@ -37,6 +41,7 @@ export type ContactRecipient = {
   id: number;
   name: string;
   number: string;
+  group: MessageTemplateGroup;
   listIds: number[];
 };
 
@@ -260,6 +265,7 @@ class ContactRepository {
         c.id,
         c.name,
         c.phone_number,
+        c.notes,
         GROUP_CONCAT(clm.list_id) AS list_ids
       FROM contacts c
       LEFT JOIN contact_list_members clm
@@ -278,6 +284,7 @@ class ContactRepository {
           id: number;
           name: string;
           phone_number: string;
+          notes: string | null;
           list_ids: string | null;
         }
       | undefined;
@@ -290,6 +297,7 @@ class ContactRepository {
       id: row.id,
       name: row.name,
       number: row.phone_number,
+      group: getMessageTemplateGroupFromNotes(row.notes),
       listIds: this.parseIdList(row.list_ids)
     };
   }
@@ -300,7 +308,7 @@ class ContactRepository {
     if (contactIds.length > 0) {
       const placeholders = contactIds.map(() => '?').join(', ');
       const statement = database.prepare(`
-        SELECT id, name, phone_number
+        SELECT id, name, phone_number, notes
         FROM contacts
         WHERE user_id = ?
           AND is_active = 1
@@ -311,6 +319,7 @@ class ContactRepository {
         id: number;
         name: string;
         phone_number: string;
+        notes: string | null;
       }>;
 
       for (const row of rows) {
@@ -318,6 +327,7 @@ class ContactRepository {
           id: row.id,
           name: row.name,
           number: row.phone_number,
+          group: getMessageTemplateGroupFromNotes(row.notes),
           listIds: []
         });
       }
@@ -330,6 +340,7 @@ class ContactRepository {
           c.id,
           c.name,
           c.phone_number,
+          c.notes,
           clm.list_id
         FROM contacts c
         INNER JOIN contact_list_members clm
@@ -346,6 +357,7 @@ class ContactRepository {
         id: number;
         name: string;
         phone_number: string;
+        notes: string | null;
         list_id: number;
       }>;
 
@@ -363,6 +375,7 @@ class ContactRepository {
           id: row.id,
           name: row.name,
           number: row.phone_number,
+          group: getMessageTemplateGroupFromNotes(row.notes),
           listIds: [row.list_id]
         });
       }

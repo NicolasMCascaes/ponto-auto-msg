@@ -11,6 +11,7 @@ type SendMessageBody = {
 };
 
 type SendBatchBody = {
+  mode?: unknown;
   contactIds?: unknown;
   listIds?: unknown;
   text?: unknown;
@@ -183,16 +184,7 @@ export async function sendBatchMessagesController(
 ): Promise<void> {
   try {
     const userId = getAuthenticatedUserId(req);
-    const { contactIds, listIds, text } = req.body;
-
-    if (typeof text !== 'string' || text.trim().length === 0) {
-      res.status(400).json({
-        error: {
-          message: "Payload invalido. Informe 'text' corretamente."
-        }
-      });
-      return;
-    }
+    const { mode, contactIds, listIds, text } = req.body;
 
     if (!Array.isArray(contactIds) || !Array.isArray(listIds)) {
       res.status(400).json({
@@ -236,8 +228,47 @@ export async function sendBatchMessagesController(
       return;
     }
 
+    const parsedMode =
+      mode === undefined || mode === null || mode === 'manual'
+        ? 'manual'
+        : mode === 'group-random'
+          ? 'group-random'
+          : null;
+
+    if (!parsedMode) {
+      res.status(400).json({
+        error: {
+          message: "Payload invalido. Informe 'mode' corretamente."
+        }
+      });
+      return;
+    }
+
+    if (parsedMode === 'manual') {
+      if (typeof text !== 'string' || text.trim().length === 0) {
+        res.status(400).json({
+          error: {
+            message: "Payload invalido. Informe 'text' corretamente."
+          }
+        });
+        return;
+      }
+      const result = await messageService.sendBatch(userId, {
+        mode: 'manual',
+        text: text.trim(),
+        contactIds: parsedContactIds,
+        listIds: parsedListIds
+      });
+
+      res.status(200).json({
+        message: 'Envio em lote concluido.',
+        data: result
+      });
+      return;
+    }
+
     const result = await messageService.sendBatch(userId, {
-      text: text.trim(),
+      mode: 'group-random',
       contactIds: parsedContactIds,
       listIds: parsedListIds
     });
@@ -258,6 +289,15 @@ export async function sendBatchMessagesController(
       }
 
       if (error.message.includes('Nenhum contato ativo')) {
+        res.status(400).json({
+          error: {
+            message: error.message
+          }
+        });
+        return;
+      }
+
+      if (error.message.includes('mensagens cadastradas')) {
         res.status(400).json({
           error: {
             message: error.message

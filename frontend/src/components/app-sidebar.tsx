@@ -2,6 +2,7 @@ import {
   BookUserIcon,
   BoxesIcon,
   Clock3Icon,
+  FileTextIcon,
   HomeIcon,
   SendIcon,
   SmartphoneIcon
@@ -46,6 +47,11 @@ const navigationItems = [
     icon: BoxesIcon
   },
   {
+    title: 'Modelos',
+    href: '/templates',
+    icon: FileTextIcon
+  },
+  {
     title: 'Envios',
     href: '/send',
     icon: SendIcon
@@ -77,7 +83,7 @@ function getStatusLabel(
 
 export function AppSidebar() {
   const location = useLocation();
-  const { contacts, lists, recentMessages, status } = useAppData();
+  const { contacts, lists, messageTemplates, recentMessages, status } = useAppData();
 
   return (
     <Sidebar variant="floating" collapsible="icon">
@@ -120,6 +126,9 @@ export function AppSidebar() {
                     <SidebarMenuBadge>{contacts.length}</SidebarMenuBadge>
                   ) : null}
                   {item.href === '/lists' ? <SidebarMenuBadge>{lists.length}</SidebarMenuBadge> : null}
+                  {item.href === '/templates' ? (
+                    <SidebarMenuBadge>{messageTemplates.length}</SidebarMenuBadge>
+                  ) : null}
                   {item.href === '/history' ? (
                     <SidebarMenuBadge>{recentMessages.length}</SidebarMenuBadge>
                   ) : null}

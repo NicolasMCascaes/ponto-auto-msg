@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/sheet';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { getContactGroupFromNotes, getMessageTemplateMemberLabel } from '@/lib/message-template-groups';
 import { useAppData } from '@/providers/app-data-provider';
 
 type ContactDraft = {
@@ -161,7 +162,7 @@ export function ContactsPage() {
       <PageHeader
         eyebrow="Contatos"
         title="Sua agenda de contatos"
-        description="Cadastre contatos, adicione observações internas e organize tudo em listas reutilizáveis."
+        description="Cadastre contatos, adicione observacoes internas e organize tudo em listas reutilizaveis."
         actions={
           <Button onClick={openCreateSheet}>
             <PlusIcon className="size-4" />
@@ -179,7 +180,7 @@ export function ContactsPage() {
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Buscar por nome, número ou observação"
+                placeholder="Buscar por nome, numero ou observacao"
                 className="pl-9"
               />
             </div>
@@ -217,63 +218,73 @@ export function ContactsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Contato</TableHead>
-                  <TableHead>Número</TableHead>
+                  <TableHead>Numero</TableHead>
+                  <TableHead>Grupo</TableHead>
                   <TableHead>Listas</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead className="text-right">Acoes</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredContacts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-12 text-center text-muted-foreground">
+                    <TableCell colSpan={6} className="py-12 text-center text-muted-foreground">
                       Nenhum contato encontrado para os filtros atuais.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredContacts.map((contact) => (
-                    <TableRow key={contact.id}>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <p className="font-medium text-foreground">{contact.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {contact.notes || 'Sem observações internas.'}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium">{contact.number}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {contact.lists.length === 0 ? (
-                            <Badge variant="outline">Sem listas</Badge>
-                          ) : (
-                            contact.lists.map((list) => (
-                              <Badge key={list.id} variant="secondary">
-                                {list.name}
-                              </Badge>
-                            ))
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={contact.isActive ? 'default' : 'secondary'}>
-                          {contact.isActive ? 'Ativo' : 'Inativo'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="sm" onClick={() => openEditSheet(contact.id)}>
-                            <PencilIcon className="size-4" />
-                            Editar
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => setDeletingId(contact.id)}>
-                            <Trash2Icon className="size-4" />
-                            Excluir
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  filteredContacts.map((contact) => {
+                    const group = getContactGroupFromNotes(contact.notes);
+
+                    return (
+                      <TableRow key={contact.id}>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <p className="font-medium text-foreground">{contact.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {contact.notes || 'Sem observacoes internas.'}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium">{contact.number}</TableCell>
+                        <TableCell>
+                          <Badge variant={group === 'teacher' ? 'default' : 'secondary'}>
+                            {getMessageTemplateMemberLabel(group)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {contact.lists.length === 0 ? (
+                              <Badge variant="outline">Sem listas</Badge>
+                            ) : (
+                              contact.lists.map((list) => (
+                                <Badge key={list.id} variant="secondary">
+                                  {list.name}
+                                </Badge>
+                              ))
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={contact.isActive ? 'default' : 'secondary'}>
+                            {contact.isActive ? 'Ativo' : 'Inativo'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="outline" size="sm" onClick={() => openEditSheet(contact.id)}>
+                              <PencilIcon className="size-4" />
+                              Editar
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => setDeletingId(contact.id)}>
+                              <Trash2Icon className="size-4" />
+                              Excluir
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
@@ -299,12 +310,12 @@ export function ContactsPage() {
                     id="contact-name"
                     value={draft.name}
                     onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
-                    placeholder="Ex.: Operação São Paulo"
+                    placeholder="Ex.: Operacao Sao Paulo"
                   />
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="contact-number">Número</Label>
+                  <Label htmlFor="contact-number">Numero</Label>
                   <Input
                     id="contact-number"
                     value={draft.number}
@@ -314,13 +325,16 @@ export function ContactsPage() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="contact-notes">Observações</Label>
+                  <Label htmlFor="contact-notes">Observacoes</Label>
                   <Textarea
                     id="contact-notes"
                     value={draft.notes}
                     onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))}
-                    placeholder="Informações internas sobre o contato."
+                    placeholder='Ex.: prof_fulano ou informacoes internas sobre o contato.'
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Se a observacao comecar com "prof", este contato sera tratado como professor nos envios por grupo.
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-muted/30 px-4 py-3">
@@ -343,7 +357,7 @@ export function ContactsPage() {
                   <div>
                     <Label>Listas vinculadas</Label>
                     <p className="text-xs text-muted-foreground">
-                      Um contato pode pertencer a várias listas ao mesmo tempo.
+                      Um contato pode pertencer a varias listas ao mesmo tempo.
                     </p>
                   </div>
 
@@ -367,7 +381,7 @@ export function ContactsPage() {
                               <p className="text-sm font-medium">{list.name}</p>
                               <p className="text-xs text-muted-foreground">
                                 {list.memberCount} membro(s)
-                                {list.description ? ` • ${list.description}` : ''}
+                                {list.description ? ` - ${list.description}` : ''}
                               </p>
                             </div>
                           </label>
@@ -384,7 +398,7 @@ export function ContactsPage() {
                 Cancelar
               </Button>
               <Button onClick={() => void handleSave()} disabled={isSaving}>
-                {isSaving ? 'Salvando...' : editingId ? 'Salvar alterações' : 'Criar contato'}
+                {isSaving ? 'Salvando...' : editingId ? 'Salvar alteracoes' : 'Criar contato'}
               </Button>
             </SheetFooter>
           </div>
@@ -396,7 +410,7 @@ export function ContactsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir contato?</AlertDialogTitle>
             <AlertDialogDescription>
-              Essa ação remove o contato da agenda e de todas as listas associadas.
+              Essa acao remove o contato da agenda e de todas as listas associadas.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

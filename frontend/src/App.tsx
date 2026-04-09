@@ -19,6 +19,7 @@ import { ContactsPage } from '@/pages/contacts-page';
 import { DashboardPage } from '@/pages/dashboard-page';
 import { HistoryPage } from '@/pages/history-page';
 import { ListsPage } from '@/pages/lists-page';
+import { MessageTemplatesPage } from '@/pages/message-templates-page';
 import { SendPage } from '@/pages/send-page';
 import { SessionPage } from '@/pages/session-page';
 import { AppDataProvider } from '@/providers/app-data-provider';
@@ -30,6 +31,7 @@ const routeTitles: Record<string, string> = {
   '/session': 'Conexão do WhatsApp',
   '/contacts': 'Agenda',
   '/lists': 'Listas',
+  '/templates': 'Modelos de mensagem',
   '/send': 'Envios',
   '/history': 'Histórico'
 };
@@ -119,6 +121,7 @@ function ProtectedAppLayout() {
             <Route path="/session" element={<SessionPage />} />
             <Route path="/contacts" element={<ContactsPage />} />
             <Route path="/lists" element={<ListsPage />} />
+            <Route path="/templates" element={<MessageTemplatesPage />} />
             <Route path="/send" element={<SendPage />} />
             <Route path="/history" element={<HistoryPage />} />
           </Routes>

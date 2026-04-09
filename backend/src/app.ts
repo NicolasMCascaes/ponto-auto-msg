@@ -5,6 +5,7 @@ import { contactListRouter } from './routes/contactListRoutes.js';
 import { contactRouter } from './routes/contactRoutes.js';
 import { healthRouter } from './routes/healthRoutes.js';
 import { messageRouter } from './routes/messageRoutes.js';
+import { messageTemplateRouter } from './routes/messageTemplateRoutes.js';
 import { whatsappRouter } from './routes/whatsappRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
@@ -63,6 +64,7 @@ app.use(protectedAuthRouter);
 app.use(whatsappRouter);
 app.use(contactRouter);
 app.use(contactListRouter);
+app.use(messageTemplateRouter);
 app.use(messageRouter);
 
 app.use((_req: Request, res: Response) => {

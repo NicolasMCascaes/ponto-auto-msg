@@ -1,6 +1,12 @@
 import { contactRepository } from './contactRepository.js';
 import { messageLogRepository, type MessageSendMode } from './messageLogRepository.js';
+import { messageTemplateRepository } from './messageTemplateRepository.js';
 import { whatsappSessionService } from './whatsappSessionService.js';
+import {
+  getMessageTemplateGroupLabel,
+  renderMessageTemplateContent,
+  type MessageTemplateGroup
+} from '../utils/messageTemplates.js';
 
 export type SendSingleMessageInput =
   | {
@@ -21,11 +27,18 @@ export type SendSingleMessageResult = {
   contactId?: number;
 };
 
-export type SendBatchMessageInput = {
-  text: string;
-  contactIds: number[];
-  listIds: number[];
-};
+export type SendBatchMessageInput =
+  | {
+      mode: 'manual';
+      text: string;
+      contactIds: number[];
+      listIds: number[];
+    }
+  | {
+      mode: 'group-random';
+      contactIds: number[];
+      listIds: number[];
+    };
 
 export type SendBatchMessageResult = {
   batchId: number;
@@ -97,19 +110,64 @@ class MessageService {
       throw new Error('Nenhum contato ativo foi encontrado para o envio em lote.');
     }
 
-    const batch = messageLogRepository.createBatch(userId, input.text, recipients.length);
+    if (input.mode === 'manual') {
+      return this.dispatchBatchMessages(userId, recipients, input.text, () => input.text);
+    }
+
+    const groupsInBatch = [...new Set(recipients.map((recipient) => recipient.group))];
+    const templates = messageTemplateRepository.listByGroups(userId, groupsInBatch);
+    const templatesByGroup = new Map<MessageTemplateGroup, typeof templates>();
+
+    for (const template of templates) {
+      const groupTemplates = templatesByGroup.get(template.group) ?? [];
+      groupTemplates.push(template);
+      templatesByGroup.set(template.group, groupTemplates);
+    }
+
+    const missingGroups = groupsInBatch.filter((group) => {
+      return (templatesByGroup.get(group)?.length ?? 0) === 0;
+    });
+
+    if (missingGroups.length > 0) {
+      const missingLabels = missingGroups.map((group) => getMessageTemplateGroupLabel(group));
+      throw new Error(`Faltam mensagens cadastradas para ${missingLabels.join(' e ')}.`);
+    }
+
+    return this.dispatchBatchMessages(
+      userId,
+      recipients,
+      'Envio aleatorio por grupo',
+      (recipient) => {
+        const groupTemplates = templatesByGroup.get(recipient.group) ?? [];
+        const selectedTemplate =
+          groupTemplates[Math.floor(Math.random() * groupTemplates.length)];
+
+        return renderMessageTemplateContent(selectedTemplate.content, recipient.name);
+      }
+    );
+  }
+
+  private async dispatchBatchMessages(
+    userId: number,
+    recipients: ReturnType<typeof contactRepository.getBatchRecipients>,
+    batchContent: string,
+    resolveContent: (recipient: ReturnType<typeof contactRepository.getBatchRecipients>[number]) => string
+  ): Promise<SendBatchMessageResult> {
+    const batch = messageLogRepository.createBatch(userId, batchContent, recipients.length);
     let successCount = 0;
     let failedCount = 0;
 
     for (const recipient of recipients) {
+      const content = resolveContent(recipient);
+
       try {
-        await whatsappSessionService.sendTextMessage(recipient.number, input.text);
+        await whatsappSessionService.sendTextMessage(recipient.number, content);
         successCount += 1;
 
         messageLogRepository.create({
           userId,
           destinationNumber: recipient.number,
-          content: input.text,
+          content,
           sentAt: new Date().toISOString(),
           status: 'sent',
           contactId: recipient.id,
@@ -123,7 +181,7 @@ class MessageService {
         messageLogRepository.create({
           userId,
           destinationNumber: recipient.number,
-          content: input.text,
+          content,
           sentAt: new Date().toISOString(),
           status: 'failed',
           errorMessage: error instanceof Error ? error.message : 'Falha ao enviar mensagem.',

@@ -134,6 +134,8 @@ export type AuthCredentials = {
   password: string;
 };
 
+export type CreateUserInput = AuthCredentials;
+
 export type AuthSession = {
   token: string;
   user: AuthUser;
@@ -223,7 +225,6 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
     if (
       response.status === 401 &&
       path !== '/auth/login' &&
-      path !== '/auth/register' &&
       unauthorizedHandler
     ) {
       unauthorizedHandler();
@@ -236,15 +237,6 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  register(input: AuthCredentials) {
-    return requestJson<ApiEnvelope<AuthSession>>('/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(input)
-    });
-  },
   login(input: AuthCredentials) {
     return requestJson<ApiEnvelope<AuthSession>>('/auth/login', {
       method: 'POST',
@@ -256,6 +248,15 @@ export const api = {
   },
   getCurrentUser() {
     return requestJson<ApiEnvelope<{ user: AuthUser }>>('/auth/me');
+  },
+  createUser(input: CreateUserInput) {
+    return requestJson<ApiEnvelope<{ user: AuthUser }>>('/users', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(input)
+    });
   },
   getWhatsappStatus() {
     return requestJson<ConnectionStatus>('/whatsapp/status');

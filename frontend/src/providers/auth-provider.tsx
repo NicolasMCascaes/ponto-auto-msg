@@ -25,7 +25,6 @@ type AuthContextValue = {
   isBooting: boolean;
   isAuthenticated: boolean;
   login: (input: AuthCredentials) => Promise<AuthUser>;
-  register: (input: AuthCredentials) => Promise<AuthUser>;
   logout: () => void;
   refreshCurrentUser: () => Promise<AuthUser | null>;
 };
@@ -91,15 +90,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(
     async (input: AuthCredentials) => {
       const payload = await api.login(input);
-      applySession(payload.data);
-      return payload.data.user;
-    },
-    [applySession]
-  );
-
-  const register = useCallback(
-    async (input: AuthCredentials) => {
-      const payload = await api.register(input);
       applySession(payload.data);
       return payload.data.user;
     },
@@ -174,11 +164,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isBooting,
       isAuthenticated: Boolean(user && token),
       login,
-      register,
       logout,
       refreshCurrentUser
     }),
-    [isBooting, login, logout, refreshCurrentUser, register, token, user]
+    [isBooting, login, logout, refreshCurrentUser, token, user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -5,7 +5,8 @@ import {
   FileTextIcon,
   HomeIcon,
   SendIcon,
-  SmartphoneIcon
+  SmartphoneIcon,
+  UserRoundPlusIcon
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -48,6 +49,11 @@ const navigationItems = [
     icon: BoxesIcon
   },
   {
+    title: 'Usuários',
+    href: '/users',
+    icon: UserRoundPlusIcon
+  },
+  {
     title: 'Modelos',
     href: '/templates',
     icon: FileTextIcon
@@ -87,7 +93,7 @@ export function AppSidebar() {
   const { user } = useAuth();
   const { contacts, lists, messageTemplates, recentMessages, status } = useAppData();
   const visibleNavigationItems = navigationItems.filter((item) => {
-    return item.href !== '/templates' || user?.role === 'admin';
+    return (item.href !== '/templates' && item.href !== '/users') || user?.role === 'admin';
   });
 
   return (

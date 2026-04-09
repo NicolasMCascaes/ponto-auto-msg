@@ -31,7 +31,7 @@ function parseAuthInput(body: AuthBody): { email: string; password: string } | n
   return { email, password };
 }
 
-export async function registerController(
+export async function createUserController(
   req: Request<unknown, unknown, AuthBody>,
   res: Response,
   next: NextFunction
@@ -57,10 +57,12 @@ export async function registerController(
       return;
     }
 
-    const result = await authService.register(input.email, input.password);
+    const user = await authService.createUser(input.email, input.password);
 
     res.status(201).json({
-      data: result
+      data: {
+        user
+      }
     });
   } catch (error) {
     next(error);

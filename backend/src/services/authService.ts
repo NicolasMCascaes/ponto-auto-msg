@@ -12,9 +12,13 @@ export type AuthResult = {
 };
 
 class AuthService {
-  async register(email: string, password: string): Promise<AuthResult> {
+  async createUser(email: string, password: string): Promise<PublicUserRecord> {
     const passwordHash = await hashPassword(password);
-    const user = userRepository.create({ email, passwordHash });
+    return userRepository.create({ email, passwordHash });
+  }
+
+  async register(email: string, password: string): Promise<AuthResult> {
+    const user = await this.createUser(email, password);
 
     return {
       token: signAuthToken({

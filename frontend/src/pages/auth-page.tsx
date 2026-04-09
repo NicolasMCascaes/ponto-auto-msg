@@ -20,21 +20,16 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/providers/auth-provider';
-
-type AuthTab = 'login' | 'register';
 
 type FormState = {
   email: string;
   password: string;
-  confirmPassword: string;
 };
 
 const initialFormState: FormState = {
   email: '',
-  password: '',
-  confirmPassword: ''
+  password: ''
 };
 
 function isValidEmail(email: string) {
@@ -44,22 +39,15 @@ function isValidEmail(email: string) {
 export function AuthPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, register } = useAuth();
-  const [activeTab, setActiveTab] = useState<AuthTab>('login');
+  const { login } = useAuth();
   const [loginForm, setLoginForm] = useState<FormState>(initialFormState);
-  const [registerForm, setRegisterForm] = useState<FormState>(initialFormState);
-  const [isSubmitting, setIsSubmitting] = useState<AuthTab | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const redirectTarget = useMemo(() => {
     const fromState = (location.state as { from?: string } | null)?.from;
     return typeof fromState === 'string' && fromState.length > 0 ? fromState : '/';
   }, [location.state]);
-
-  function handleTabChange(value: string) {
-    setActiveTab(value as AuthTab);
-    setErrorMessage(null);
-  }
 
   function validateCredentials(email: string, password: string) {
     if (!isValidEmail(email.trim().toLowerCase())) {
@@ -86,7 +74,7 @@ export function AuthPage() {
       return;
     }
 
-    setIsSubmitting('login');
+    setIsSubmitting(true);
 
     try {
       await login({ email, password });
@@ -97,40 +85,7 @@ export function AuthPage() {
       setErrorMessage(message);
       toast.error(message);
     } finally {
-      setIsSubmitting(null);
-    }
-  }
-
-  async function handleRegisterSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setErrorMessage(null);
-
-    const email = registerForm.email.trim().toLowerCase();
-    const password = registerForm.password;
-    const validationError = validateCredentials(email, password);
-
-    if (validationError) {
-      setErrorMessage(validationError);
-      return;
-    }
-
-    if (registerForm.confirmPassword !== password) {
-      setErrorMessage('A confirmação de senha precisa ser igual à senha informada.');
-      return;
-    }
-
-    setIsSubmitting('register');
-
-    try {
-      await register({ email, password });
-      toast.success('Conta criada. Bem-vindo ao painel.');
-      navigate(redirectTarget, { replace: true });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Não foi possível criar sua conta.';
-      setErrorMessage(message);
-      toast.error(message);
-    } finally {
-      setIsSubmitting(null);
+      setIsSubmitting(false);
     }
   }
 
@@ -199,7 +154,7 @@ export function AuthPage() {
               <Card className="border-border/60 bg-card/80">
                 <CardHeader>
                   <CardTitle className="text-3xl">1</CardTitle>
-                  <CardDescription>Crie sua conta ou entre em instantes.</CardDescription>
+                  <CardDescription>Entre com seu usuário em instantes.</CardDescription>
                 </CardHeader>
               </Card>
 
@@ -250,144 +205,64 @@ export function AuthPage() {
               </CardHeader>
 
               <CardContent className="flex flex-col gap-6">
-                <Tabs value={activeTab} onValueChange={handleTabChange} className="gap-6">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="login">Entrar</TabsTrigger>
-                    <TabsTrigger value="register">Criar conta</TabsTrigger>
-                  </TabsList>
+                <form className="flex flex-col gap-4" onSubmit={handleLoginSubmit}>
+                  <div className="grid gap-2">
+                    <Label htmlFor="login-email">E-mail</Label>
+                    <div className="relative">
+                      <MailIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        id="login-email"
+                        type="email"
+                        autoComplete="email"
+                        placeholder="voce@empresa.com"
+                        value={loginForm.email}
+                        onChange={(event) =>
+                          setLoginForm((current) => ({ ...current, email: event.target.value }))
+                        }
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
 
-                  <TabsContent value="login">
-                    <form className="flex flex-col gap-4" onSubmit={handleLoginSubmit}>
-                      <div className="grid gap-2">
-                        <Label htmlFor="login-email">E-mail</Label>
-                        <div className="relative">
-                          <MailIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input
-                            id="login-email"
-                            type="email"
-                            autoComplete="email"
-                            placeholder="voce@empresa.com"
-                            value={loginForm.email}
-                            onChange={(event) =>
-                              setLoginForm((current) => ({ ...current, email: event.target.value }))
-                            }
-                            className="pl-10"
-                          />
-                        </div>
-                      </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="login-password">Senha</Label>
+                    <div className="relative">
+                      <KeyRoundIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        id="login-password"
+                        type="password"
+                        autoComplete="current-password"
+                        placeholder="Sua senha"
+                        value={loginForm.password}
+                        onChange={(event) =>
+                          setLoginForm((current) => ({
+                            ...current,
+                            password: event.target.value
+                          }))
+                        }
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
 
-                      <div className="grid gap-2">
-                        <Label htmlFor="login-password">Senha</Label>
-                        <div className="relative">
-                          <KeyRoundIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input
-                            id="login-password"
-                            type="password"
-                            autoComplete="current-password"
-                            placeholder="Sua senha"
-                            value={loginForm.password}
-                            onChange={(event) =>
-                              setLoginForm((current) => ({
-                                ...current,
-                                password: event.target.value
-                              }))
-                            }
-                            className="pl-10"
-                          />
-                        </div>
-                      </div>
+                  {errorMessage ? (
+                    <p className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+                      {errorMessage}
+                    </p>
+                  ) : null}
 
-                      {errorMessage && activeTab === 'login' ? (
-                        <p className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-                          {errorMessage}
-                        </p>
-                      ) : null}
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? 'Entrando...' : 'Entrar agora'}
+                    <ArrowRightIcon className="size-4" />
+                  </Button>
+                </form>
 
-                      <Button type="submit" className="w-full" disabled={isSubmitting !== null}>
-                        {isSubmitting === 'login' ? 'Entrando...' : 'Entrar agora'}
-                        <ArrowRightIcon className="size-4" />
-                      </Button>
-                    </form>
-                  </TabsContent>
-
-                  <TabsContent value="register">
-                    <form className="flex flex-col gap-4" onSubmit={handleRegisterSubmit}>
-                      <div className="grid gap-2">
-                        <Label htmlFor="register-email">E-mail</Label>
-                        <div className="relative">
-                          <MailIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input
-                            id="register-email"
-                            type="email"
-                            autoComplete="email"
-                            placeholder="time@empresa.com"
-                            value={registerForm.email}
-                            onChange={(event) =>
-                              setRegisterForm((current) => ({
-                                ...current,
-                                email: event.target.value
-                              }))
-                            }
-                            className="pl-10"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid gap-2">
-                        <Label htmlFor="register-password">Senha</Label>
-                        <div className="relative">
-                          <KeyRoundIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input
-                            id="register-password"
-                            type="password"
-                            autoComplete="new-password"
-                            placeholder="Use pelo menos 8 caracteres"
-                            value={registerForm.password}
-                            onChange={(event) =>
-                              setRegisterForm((current) => ({
-                                ...current,
-                                password: event.target.value
-                              }))
-                            }
-                            className="pl-10"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid gap-2">
-                        <Label htmlFor="register-confirm-password">Confirmar senha</Label>
-                        <div className="relative">
-                          <KeyRoundIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input
-                            id="register-confirm-password"
-                            type="password"
-                            autoComplete="new-password"
-                            placeholder="Repita a senha escolhida"
-                            value={registerForm.confirmPassword}
-                            onChange={(event) =>
-                              setRegisterForm((current) => ({
-                                ...current,
-                                confirmPassword: event.target.value
-                              }))
-                            }
-                            className="pl-10"
-                          />
-                        </div>
-                      </div>
-
-                      {errorMessage && activeTab === 'register' ? (
-                        <p className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-                          {errorMessage}
-                        </p>
-                      ) : null}
-
-                      <Button type="submit" className="w-full" disabled={isSubmitting !== null}>
-                        {isSubmitting === 'register' ? 'Criando conta...' : 'Criar conta'}
-                        <ArrowRightIcon className="size-4" />
-                      </Button>
-                    </form>
-                  </TabsContent>
-                </Tabs>
+                <div className="rounded-2xl border border-border/70 bg-muted/40 px-4 py-4">
+                  <p className="text-sm font-medium text-foreground">Cadastro interno</p>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                    Novos usuários só podem ser criados por um administrador autenticado.
+                  </p>
+                </div>
 
                 <div className="rounded-2xl border border-border/70 bg-muted/40 px-4 py-4">
                   <p className="text-sm font-medium text-foreground">Tudo pronto para começar</p>

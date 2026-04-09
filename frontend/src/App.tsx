@@ -22,6 +22,7 @@ import { ListsPage } from '@/pages/lists-page';
 import { MessageTemplatesPage } from '@/pages/message-templates-page';
 import { SendPage } from '@/pages/send-page';
 import { SessionPage } from '@/pages/session-page';
+import { UsersPage } from '@/pages/users-page';
 import { AppDataProvider } from '@/providers/app-data-provider';
 import { useAppData } from '@/providers/app-data-provider';
 import { useAuth } from '@/providers/auth-provider';
@@ -31,6 +32,7 @@ const routeTitles: Record<string, string> = {
   '/session': 'Conexão do WhatsApp',
   '/contacts': 'Agenda',
   '/lists': 'Listas',
+  '/users': 'Usuários',
   '/templates': 'Modelos de mensagem',
   '/send': 'Envios',
   '/history': 'Histórico'
@@ -66,7 +68,7 @@ function ProtectedAppLayout() {
   const location = useLocation();
   const { status } = useAppData();
   const { user, logout } = useAuth();
-  const canManageTemplates = user?.role === 'admin';
+  const isAdmin = user?.role === 'admin';
 
   function handleLogout() {
     logout();
@@ -122,9 +124,10 @@ function ProtectedAppLayout() {
             <Route path="/session" element={<SessionPage />} />
             <Route path="/contacts" element={<ContactsPage />} />
             <Route path="/lists" element={<ListsPage />} />
+            <Route path="/users" element={isAdmin ? <UsersPage /> : <Navigate to="/" replace />} />
             <Route
               path="/templates"
-              element={canManageTemplates ? <MessageTemplatesPage /> : <Navigate to="/" replace />}
+              element={isAdmin ? <MessageTemplatesPage /> : <Navigate to="/" replace />}
             />
             <Route path="/send" element={<SendPage />} />
             <Route path="/history" element={<HistoryPage />} />

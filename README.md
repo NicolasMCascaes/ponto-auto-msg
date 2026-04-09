@@ -1,164 +1,129 @@
 # Ponto Auto Msg
 
-Monorepo com:
+Ponto Auto Msg nasceu para resolver um problema real de operação: cobrar ajustes de espelho ponto pelo WhatsApp sem cair no caos de mensagem manual, texto repetitivo e pouca rastreabilidade.
 
-- `backend/`: API em Node.js + TypeScript + Express + SQLite
-- `frontend/`: painel React + Vite + shadcn/ui para sessao, agenda, listas, envio e historico
+Na prática, a rotina era simples de entender e ruim de executar: identificar quem precisava corrigir o ponto, separar perfis diferentes de funcionários, escrever cobranças uma a uma e tentar manter um tom humano sem parecer mensagem copiada. Este projeto transforma esse processo em um fluxo operacional mais seguro, rápido e organizado.
 
-## Requisitos
+## O problema que o produto resolve
+
+Quando a cobrança de espelho ponto é feita manualmente, alguns problemas aparecem rápido:
+
+- tempo gasto reescrevendo a mesma mensagem várias vezes;
+- dificuldade para adaptar o texto conforme o perfil do destinatário;
+- risco de mandar texto inadequado para professores e funcionários comuns;
+- pouca visibilidade do que já foi enviado e para quem;
+- chance maior de comportamento agressivo no WhatsApp ao disparar mensagens em sequência.
+
+O Ponto Auto Msg foi desenhado justamente para atacar esse cenário.
+
+## Como o produto funciona
+
+O sistema conecta uma sessão de WhatsApp, organiza uma base de contatos e permite disparos individuais ou em lote com histórico.
+
+Além disso, ele resolve uma necessidade específica da operação:
+
+- contatos podem ser classificados como `Professores` ou `Funcionários comuns`;
+- a classificação de professor é derivada da observação do contato quando ela começa com `prof`;
+- modelos de mensagem podem ser cadastrados por grupo;
+- no envio em lote por grupo, o sistema escolhe aleatoriamente uma variação de mensagem para cada destinatário;
+- a variável `{nome}` personaliza o texto final automaticamente;
+- o envio em lote aplica um intervalo entre mensagens para reduzir o risco de bloqueio do número.
+
+## Principais capacidades
+
+- autenticação por usuário;
+- sessão de WhatsApp com acompanhamento de status;
+- agenda de contatos com observações e listas;
+- segmentação por listas para montar lotes;
+- modelos de mensagem por grupo, disponíveis apenas para administradores;
+- histórico de mensagens enviadas e falhas;
+- envio manual e envio em lote com variação automática de texto.
+
+## Perfis de acesso
+
+Hoje o projeto possui dois perfis:
+
+- `admin`: pode gerenciar modelos de mensagem;
+- `user`: usa o restante do produto, sem acesso à área de modelos.
+
+## Stack
+
+- `backend/`: Node.js, TypeScript, Express, SQLite e Baileys;
+- `frontend/`: React, Vite e shadcn/ui.
+
+## Rodando localmente
+
+### Requisitos
 
 - Node.js 20+
 - npm 10+
 
-## Setup local
-
-O fluxo recomendado neste ambiente e:
-
-```bash
-bash scripts/setup-codex-env.sh
-```
-
-Ou, manualmente:
+### Instalação
 
 ```bash
 npm install
-npm run build --workspace backend
-npm run build --workspace frontend
 ```
 
-Para desenvolvimento:
+### Desenvolvimento
+
+Em terminais separados:
 
 ```bash
 npm run dev:backend
 npm run dev:frontend
 ```
 
-- Backend local: `http://localhost:3001`
-- Frontend local: `http://localhost:5173`
+Endpoints locais:
 
-## Autenticacao do backend
+- backend: `http://localhost:3001`
+- frontend: `http://localhost:5173`
 
-O backend agora possui autenticacao simples por email e password com:
+### Build
 
-- senha protegida por hash com `scrypt`
-- token JWT para sessao
-- persistencia de usuarios no SQLite atual
+```bash
+npm run build --workspace backend
+npm run build --workspace frontend
+```
 
-Variaveis de ambiente suportadas no backend:
+## Variáveis de ambiente
+
+### Backend
+
+Exemplo mínimo em `backend/.env.local`:
 
 ```bash
 JWT_SECRET=change-this-secret-in-production
 JWT_EXPIRES_IN=7d
+CORS_ORIGINS=
+BATCH_SEND_DELAY_MIN_MS=4000
+BATCH_SEND_DELAY_MAX_MS=7000
 ```
 
-Exemplo de endpoints:
+### Frontend
 
-- `POST /auth/register`
-- `POST /auth/login`
-- `GET /auth/me`
-
-Payload de cadastro/login:
-
-```json
-{
-  "email": "admin@exemplo.com",
-  "password": "minha-senha-segura"
-}
-```
-
-O endpoint `GET /auth/me` espera `Authorization: Bearer <token>`.
-
-
-## Deploy do backend na Vercel
-
-O backend agora inclui `backend/vercel.json` e um entrypoint serverless em `backend/api/index.ts`.
-
-### Como configurar no painel da Vercel
-
-1. Importe este repositorio na Vercel (ou use o projeto ja criado).
-2. Defina **Root Directory = `backend`**.
-3. Framework preset: **Other**.
-4. Build Command: `npm run build`.
-5. Install Command: `npm install`.
-6. Nao defina Output Directory (funcoes serverless nao usam `dist` publico).
-7. Runtime da funcao: `nodejs22.x` (ja definido no `vercel.json`).
-
-### Variaveis de ambiente minimas
-
-No projeto do backend na Vercel, configure:
+Exemplo mínimo em `frontend/.env.local`:
 
 ```bash
-JWT_SECRET=troque-por-um-valor-forte
-JWT_EXPIRES_IN=7d
-CORS_ORIGINS=https://seu-frontend.vercel.app
+VITE_API_BASE_URL=http://localhost:3001
 ```
 
-Se tiver ambiente Preview e Production com URLs diferentes, inclua ambas separadas por virgula em `CORS_ORIGINS`.
+## Observações de produção
 
-### Por que o build/deploy costuma falhar
+O produto depende de sessão ativa do WhatsApp via Baileys e usa SQLite local. Isso significa que o backend funciona melhor em ambiente com processo persistente e disco estável.
 
-1. **Node desatualizado**: este backend usa `node:sqlite`, que requer Node 22+.
-2. **Root Directory incorreto**: se ficar na raiz do monorepo, a Vercel tenta pipeline diferente do backend.
-3. **Tentativa de `app.listen` em serverless**: na Vercel a aplicacao precisa exportar o app, sem abrir porta manualmente.
+Para uso real, a recomendação é hospedar o backend em infraestrutura durável, como Railway, Render, Fly.io ou VPS. O frontend pode ser publicado separadamente com mais facilidade.
 
-### Limites importantes na Vercel para este backend
+## Estado atual do produto
 
-Este projeto tem partes **stateful** (`.data/messages.sqlite` e sessao do WhatsApp em `.baileys_auth`). Em Serverless, o filesystem e efemero e multiplas invocacoes podem acontecer em instancias diferentes.
+Este repositório já cobre o fluxo principal de operação:
 
-Na pratica:
-- endpoints stateless (health, auth, CRUD simples) tendem a funcionar melhor;
-- sessao persistente do WhatsApp e SQLite local podem ficar instaveis na Vercel.
+- login;
+- conexão com WhatsApp;
+- cadastro e organização de contatos;
+- criação de listas;
+- criação de modelos por grupo;
+- envio manual;
+- envio em lote com personalização e aleatoriedade;
+- histórico operacional.
 
-Para operacao estavel de producao, prefira hospedar o backend em ambiente com processo persistente e disco duravel (ex.: Railway, Render, Fly.io, VPS).
-
-## Deploy do frontend na Vercel
-
-O frontend esta preparado para ser publicado como um projeto separado da Vercel usando `Root Directory = frontend`.
-
-### Configuracao recomendada
-
-1. Importe este repositorio na Vercel.
-2. Em `Root Directory`, selecione `frontend`.
-3. Confirme que o comando de build esta como `npm run build`.
-4. Confirme que o output esta como `dist`.
-5. Adicione a variavel de ambiente `VITE_API_BASE_URL` apontando para a URL publica do backend.
-
-Exemplo:
-
-```bash
-VITE_API_BASE_URL=https://api.seu-dominio.com
-```
-
-Se o backend estiver publicado em um prefixo, como `/api`, inclua esse trecho na variavel:
-
-```bash
-VITE_API_BASE_URL=https://seu-dominio.com/api
-```
-
-O arquivo `frontend/vercel.json` ja inclui o rewrite de SPA para que rotas do `react-router-dom` funcionem em refresh e acesso direto.
-
-### Observacoes importantes
-
-- Em desenvolvimento, o frontend continua usando `/api` com proxy do Vite para `http://localhost:3001`.
-- Em producao, o frontend usa `VITE_API_BASE_URL` tanto em Preview quanto em Production.
-- Um arquivo de exemplo foi adicionado em `frontend/.env.example`.
-
-## Scripts uteis
-
-Na raiz:
-
-- `npm run dev:backend`
-- `npm run dev:frontend`
-- `npm run build`
-
-No backend:
-
-- `npm run dev`
-- `npm run build`
-- `npm run start`
-
-No frontend:
-
-- `npm run dev`
-- `npm run build`
-- `npm run preview`
+Ou seja: não é apenas um painel de demonstração. É uma ferramenta criada para resolver uma dor operacional concreta do dia a dia.

@@ -181,8 +181,8 @@ export function SendPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Envio"
-        title="Envie mensagens com confianca"
-        description="Escolha um contato da agenda, informe um numero avulso ou monte um envio em lote manual ou por grupo em poucos passos."
+        title="Envie mensagens com confiança"
+        description="Escolha um contato da agenda, informe um número avulso ou monte um envio em lote manual ou por grupo em poucos passos."
       />
 
       {!status?.isConnected ? (
@@ -192,7 +192,7 @@ export function SendPage() {
             <div>
               <p className="font-medium">WhatsApp ainda nao esta conectado</p>
               <p className="mt-1 text-destructive/80">
-                Conecte sua sessao antes de iniciar novos envios.
+                Conecte sua sessão antes de iniciar novos envios.
               </p>
             </div>
           </CardContent>
@@ -214,14 +214,14 @@ export function SendPage() {
               </CardHeader>
               <CardContent className="space-y-5">
                 <div className="grid gap-2">
-                  <Label>Como voce quer enviar?</Label>
+                  <Label>Como você quer enviar?</Label>
                   <Select value={singleMode} onValueChange={(value) => setSingleMode(value as typeof singleMode)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="contact">Contato salvo</SelectItem>
-                      <SelectItem value="manual">Numero avulso</SelectItem>
+                      <SelectItem value="manual">Número avulso</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -245,7 +245,7 @@ export function SendPage() {
                   </div>
                 ) : (
                   <div className="grid gap-2">
-                    <Label htmlFor="manual-number">Numero avulso</Label>
+                    <Label htmlFor="manual-number">Número avulso</Label>
                     <Input
                       id="manual-number"
                       value={manualNumber}
@@ -260,8 +260,8 @@ export function SendPage() {
 
                 <div className="rounded-2xl border border-border/70 bg-background/70 p-4 text-sm text-muted-foreground">
                   {singleMode === 'contact'
-                    ? 'Use um contato ja salvo para manter seu historico organizado e reutilizar dados com facilidade.'
-                    : 'O envio avulso e ideal para mensagens rapidas. Se quiser reutilizar esse numero depois, salve-o na agenda.'}
+                    ? 'Use um contato já salvo para manter seu histórico organizado e reutilizar dados com facilidade.'
+                    : 'O envio avulso é ideal para mensagens rápidas. Se quiser reutilizar esse número depois, salve-o na agenda.'}
                 </div>
               </CardContent>
             </Card>
@@ -302,13 +302,13 @@ export function SendPage() {
           <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
             <Card className="border-border/70 bg-card/90 shadow-sm">
               <CardHeader>
-                <CardDescription>Destinatarios</CardDescription>
+                <CardDescription>Destinatários</CardDescription>
                 <CardTitle>Monte seu lote</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-4 lg:grid-cols-2">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label>Contatos disponiveis</Label>
+                    <Label>Contatos disponíveis</Label>
                     <Badge variant="secondary">{selectedContactIds.length} selecionado(s)</Badge>
                   </div>
                   <ScrollArea className="h-72 rounded-2xl border border-border/70 bg-background/70 p-4">
@@ -429,14 +429,14 @@ export function SendPage() {
                         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Professores</p>
                         <p className="mt-2 text-xl font-semibold">{batchGroupCounts.teacher}</p>
                         <p className="mt-2 text-sm text-muted-foreground">
-                          {templateCounts.teacher} modelo(s) disponivel(is)
+                          {templateCounts.teacher} modelo(s) disponível(is)
                         </p>
                       </div>
                       <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
-                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Funcionarios</p>
+                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Funcionários</p>
                         <p className="mt-2 text-xl font-semibold">{batchGroupCounts.staff}</p>
                         <p className="mt-2 text-sm text-muted-foreground">
-                          {templateCounts.staff} modelo(s) disponivel(is)
+                          {templateCounts.staff} modelo(s) disponível(is)
                         </p>
                       </div>
                     </div>
@@ -447,7 +447,7 @@ export function SendPage() {
                         Sorteio por contato
                       </div>
                       <p className="mt-2">
-                        Cada destinatario recebe uma mensagem aleatoria do proprio grupo. A variavel {'{nome}'} e preenchida automaticamente.
+                        Cada destinatário recebe uma mensagem aleatória do próprio grupo. A variável {'{nome}'} é preenchida automaticamente.
                       </p>
                     </div>
 
@@ -489,8 +489,8 @@ export function SendPage() {
             <AlertDialogTitle>Confirmar envio em lote?</AlertDialogTitle>
             <AlertDialogDescription>
               {batchMode === 'manual'
-                ? `Esta mensagem sera enviada para ${batchTargets.length} contato(s) unicos.`
-                : `Este lote sera enviado para ${batchTargets.length} contato(s) unicos com sorteio individual por grupo.`}
+                ? `Esta mensagem será enviada para ${batchTargets.length} contato(s) únicos.`
+                : `Este lote será enviado para ${batchTargets.length} contato(s) únicos com sorteio individual por grupo.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

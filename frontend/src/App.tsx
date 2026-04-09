@@ -66,6 +66,7 @@ function ProtectedAppLayout() {
   const location = useLocation();
   const { status } = useAppData();
   const { user, logout } = useAuth();
+  const canManageTemplates = user?.role === 'admin';
 
   function handleLogout() {
     logout();
@@ -121,7 +122,10 @@ function ProtectedAppLayout() {
             <Route path="/session" element={<SessionPage />} />
             <Route path="/contacts" element={<ContactsPage />} />
             <Route path="/lists" element={<ListsPage />} />
-            <Route path="/templates" element={<MessageTemplatesPage />} />
+            <Route
+              path="/templates"
+              element={canManageTemplates ? <MessageTemplatesPage /> : <Navigate to="/" replace />}
+            />
             <Route path="/send" element={<SendPage />} />
             <Route path="/history" element={<HistoryPage />} />
           </Routes>

@@ -162,7 +162,7 @@ export function ContactsPage() {
       <PageHeader
         eyebrow="Contatos"
         title="Sua agenda de contatos"
-        description="Cadastre contatos, adicione observacoes internas e organize tudo em listas reutilizaveis."
+        description="Cadastre contatos, adicione observações internas e organize tudo em listas reutilizáveis."
         actions={
           <Button onClick={openCreateSheet}>
             <PlusIcon className="size-4" />
@@ -180,7 +180,7 @@ export function ContactsPage() {
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Buscar por nome, numero ou observacao"
+                placeholder="Buscar por nome, número ou observação"
                 className="pl-9"
               />
             </div>
@@ -218,11 +218,11 @@ export function ContactsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Contato</TableHead>
-                  <TableHead>Numero</TableHead>
+                  <TableHead>Número</TableHead>
                   <TableHead>Grupo</TableHead>
                   <TableHead>Listas</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Acoes</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -242,7 +242,7 @@ export function ContactsPage() {
                           <div className="space-y-1">
                             <p className="font-medium text-foreground">{contact.name}</p>
                             <p className="text-xs text-muted-foreground">
-                              {contact.notes || 'Sem observacoes internas.'}
+                              {contact.notes || 'Sem observações internas.'}
                             </p>
                           </div>
                         </TableCell>
@@ -310,12 +310,12 @@ export function ContactsPage() {
                     id="contact-name"
                     value={draft.name}
                     onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
-                    placeholder="Ex.: Operacao Sao Paulo"
+                    placeholder="Ex.: Operação São Paulo"
                   />
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="contact-number">Numero</Label>
+                  <Label htmlFor="contact-number">Número</Label>
                   <Input
                     id="contact-number"
                     value={draft.number}
@@ -325,15 +325,15 @@ export function ContactsPage() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="contact-notes">Observacoes</Label>
+                  <Label htmlFor="contact-notes">Observações</Label>
                   <Textarea
                     id="contact-notes"
                     value={draft.notes}
                     onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))}
-                    placeholder='Ex.: prof_fulano ou informacoes internas sobre o contato.'
+                    placeholder='Ex.: prof_fulano ou informações internas sobre o contato.'
                   />
                   <p className="text-xs text-muted-foreground">
-                    Se a observacao comecar com "prof", este contato sera tratado como professor nos envios por grupo.
+                    Se a observação começar com "prof", este contato será tratado como professor nos envios por grupo.
                   </p>
                 </div>
 
@@ -357,7 +357,7 @@ export function ContactsPage() {
                   <div>
                     <Label>Listas vinculadas</Label>
                     <p className="text-xs text-muted-foreground">
-                      Um contato pode pertencer a varias listas ao mesmo tempo.
+                      Um contato pode pertencer a várias listas ao mesmo tempo.
                     </p>
                   </div>
 
@@ -398,7 +398,7 @@ export function ContactsPage() {
                 Cancelar
               </Button>
               <Button onClick={() => void handleSave()} disabled={isSaving}>
-                {isSaving ? 'Salvando...' : editingId ? 'Salvar alteracoes' : 'Criar contato'}
+                {isSaving ? 'Salvando...' : editingId ? 'Salvar alterações' : 'Criar contato'}
               </Button>
             </SheetFooter>
           </div>
@@ -410,7 +410,7 @@ export function ContactsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir contato?</AlertDialogTitle>
             <AlertDialogDescription>
-              Essa acao remove o contato da agenda e de todas as listas associadas.
+              Essa ação remove o contato da agenda e de todas as listas associadas.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

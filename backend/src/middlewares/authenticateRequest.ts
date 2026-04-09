@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { verifyAuthToken, type AuthTokenPayload } from '../utils/jwt.js';
+import { userRepository } from '../services/userRepository.js';
 
 export type AuthenticatedRequest = Request & {
   authUser?: AuthTokenPayload;
@@ -13,6 +14,26 @@ export function getAuthenticatedUserId(req: Request<any, any, any, any>): number
   }
 
   return userId!;
+}
+
+export function authorizeAdminRequest(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void {
+  const userId = getAuthenticatedUserId(req);
+  const user = userRepository.findById(userId);
+
+  if (!user || user.role !== 'admin') {
+    res.status(403).json({
+      error: {
+        message: 'Admin access required.'
+      }
+    });
+    return;
+  }
+
+  next();
 }
 
 export function authenticateRequest(

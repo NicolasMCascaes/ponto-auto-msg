@@ -131,20 +131,20 @@ export function MessageTemplatesPage() {
       <PageHeader
         eyebrow="Modelos"
         title="Cadastre mensagens por grupo"
-        description='Crie variacoes para professores e funcionarios comuns. Nos envios por grupo, cada contato recebe um modelo aleatorio do proprio grupo com a variavel {nome}.'
+        description='Crie variações para professores e funcionários comuns. Nos envios por grupo, cada contato recebe um modelo aleatório do próprio grupo com a variável {nome}.'
       />
 
       <Card className="border-border/70 bg-card/90 shadow-sm">
         <CardContent className="grid gap-3 p-5 text-sm text-muted-foreground md:grid-cols-2">
           <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
-            <p className="font-medium text-foreground">Regra de classificacao</p>
+            <p className="font-medium text-foreground">Regra de classificação</p>
             <p className="mt-2">
-              Contatos com observacao iniciando em "prof" entram no grupo de professores.
-              Todos os demais entram como funcionarios comuns.
+              Contatos com observação iniciando em "prof" entram no grupo de professores.
+              Todos os demais entram como funcionários comuns.
             </p>
           </div>
           <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
-            <p className="font-medium text-foreground">Variavel disponivel</p>
+            <p className="font-medium text-foreground">Variável disponível</p>
             <p className="mt-2">
               Use {'{nome}'} no texto para inserir automaticamente o nome completo do contato na hora do envio.
             </p>
@@ -224,7 +224,7 @@ export function MessageTemplatesPage() {
           <DialogHeader>
             <DialogTitle>{editingId ? 'Editar modelo' : 'Novo modelo'}</DialogTitle>
             <DialogDescription>
-              Escolha o grupo, defina um nome interno facil de reconhecer e escreva a mensagem com {'{nome}'} quando quiser personalizacao.
+              Escolha o grupo, defina um nome interno fácil de reconhecer e escreva a mensagem com {'{nome}'} quando quiser personalização.
             </DialogDescription>
           </DialogHeader>
 
@@ -258,7 +258,7 @@ export function MessageTemplatesPage() {
                 onChange={(event) =>
                   setDraft((current) => ({ ...current, title: event.target.value }))
                 }
-                placeholder="Ex.: Cobranca cordial 1"
+                placeholder="Ex.: Cobrança cordial 1"
               />
             </div>
 
@@ -285,7 +285,7 @@ export function MessageTemplatesPage() {
               Cancelar
             </Button>
             <Button onClick={() => void handleSave()} disabled={isSaving}>
-              {isSaving ? 'Salvando...' : editingId ? 'Salvar alteracoes' : 'Criar modelo'}
+              {isSaving ? 'Salvando...' : editingId ? 'Salvar alterações' : 'Criar modelo'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -296,7 +296,7 @@ export function MessageTemplatesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir modelo?</AlertDialogTitle>
             <AlertDialogDescription>
-              O texto deixara de participar dos sorteios por grupo.
+              O texto deixará de participar dos sorteios por grupo.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

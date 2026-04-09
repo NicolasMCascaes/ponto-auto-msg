@@ -1,13 +1,21 @@
 import { database } from './database.js';
 
+export type UserRole = 'admin' | 'user';
+
+const ADMIN_EMAIL = 'medeiroscascaes@gmail.com';
+
+function getRoleForEmail(email: string): UserRole {
+  return email.trim().toLowerCase() === ADMIN_EMAIL ? 'admin' : 'user';
+}
+
 export type UserRecord = {
   id: number;
   email: string;
   passwordHash: string;
+  role: UserRole;
   createdAt: string;
   updatedAt: string;
 };
-
 export type PublicUserRecord = Omit<UserRecord, 'passwordHash'>;
 
 export type CreateUserInput = {
@@ -61,6 +69,7 @@ class UserRepository {
     return {
       id: row.id,
       email: row.email,
+      role: getRoleForEmail(row.email),
       createdAt: row.created_at,
       updatedAt: row.updated_at
     };
@@ -105,6 +114,7 @@ class UserRepository {
       id: row.id,
       email: row.email,
       passwordHash: row.password_hash,
+      role: getRoleForEmail(row.email),
       createdAt: row.created_at,
       updatedAt: row.updated_at
     };

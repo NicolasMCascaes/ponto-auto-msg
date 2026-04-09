@@ -24,6 +24,7 @@ import {
   type SendBatchResult,
   type SendSingleInput
 } from '@/lib/api';
+import { useAuth } from '@/providers/auth-provider';
 
 type AppDataContextValue = {
   status: ConnectionStatus | null;
@@ -61,6 +62,7 @@ const STATUS_POLL_INTERVAL_MS = 3_000;
 const RECENT_MESSAGES_POLL_INTERVAL_MS = 15_000;
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
   const [status, setStatus] = useState<ConnectionStatus | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [lists, setLists] = useState<ContactListSummary[]>([]);
@@ -100,6 +102,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshMessageTemplates = useCallback(async () => {
+    if (user?.role !== 'admin') {
+      startTransition(() => {
+        setMessageTemplates([]);
+      });
+      return [];
+    }
+
     const payload = await api.getMessageTemplates();
     const nextTemplates = payload.data ?? [];
 
@@ -108,7 +117,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     });
 
     return nextTemplates;
-  }, []);
+  }, [user?.role]);
 
   const refreshRecentMessages = useCallback(async (limit = RECENT_MESSAGES_LIMIT) => {
     const payload = await api.getRecentMessages(limit);

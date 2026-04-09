@@ -14,13 +14,13 @@ export const MESSAGE_TEMPLATE_GROUP_OPTIONS: Array<{
     value: 'teacher',
     label: 'Professores',
     memberLabel: 'Professor',
-    description: 'Usado para contatos cuja observacao comeca com "prof".'
+    description: 'Usado para contatos cuja observação começa com "prof".'
   },
   {
     value: 'staff',
-    label: 'Funcionarios comuns',
-    memberLabel: 'Funcionario comum',
-    description: 'Usado para todos os contatos que nao entram como professor.'
+    label: 'Funcionários comuns',
+    memberLabel: 'Funcionário comum',
+    description: 'Usado para todos os contatos que não entram como professor.'
   }
 ];
 

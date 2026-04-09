@@ -24,6 +24,7 @@ import {
   SidebarSeparator
 } from '@/components/ui/sidebar';
 import { useAppData } from '@/providers/app-data-provider';
+import { useAuth } from '@/providers/auth-provider';
 
 const navigationItems = [
   {
@@ -83,7 +84,11 @@ function getStatusLabel(
 
 export function AppSidebar() {
   const location = useLocation();
+  const { user } = useAuth();
   const { contacts, lists, messageTemplates, recentMessages, status } = useAppData();
+  const visibleNavigationItems = navigationItems.filter((item) => {
+    return item.href !== '/templates' || user?.role === 'admin';
+  });
 
   return (
     <Sidebar variant="floating" collapsible="icon">
@@ -106,7 +111,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationItems.map((item) => (
+              {visibleNavigationItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild

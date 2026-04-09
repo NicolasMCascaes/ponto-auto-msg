@@ -47,6 +47,45 @@ export type SendBatchMessageResult = {
   failedCount: number;
 };
 
+const DEFAULT_BATCH_DELAY_MIN_MS = 4_000;
+const DEFAULT_BATCH_DELAY_MAX_MS = 7_000;
+
+function parsePositiveDelay(value: string | undefined, fallback: number): number {
+  const parsed = Number.parseInt(value ?? '', 10);
+
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return fallback;
+  }
+
+  return parsed;
+}
+
+function getBatchDelayRange(): { minMs: number; maxMs: number } {
+  const minMs = parsePositiveDelay(process.env.BATCH_SEND_DELAY_MIN_MS, DEFAULT_BATCH_DELAY_MIN_MS);
+  const maxMs = parsePositiveDelay(process.env.BATCH_SEND_DELAY_MAX_MS, DEFAULT_BATCH_DELAY_MAX_MS);
+
+  return {
+    minMs: Math.min(minMs, maxMs),
+    maxMs: Math.max(minMs, maxMs)
+  };
+}
+
+function getRandomBatchDelayMs(): number {
+  const { minMs, maxMs } = getBatchDelayRange();
+
+  if (minMs === maxMs) {
+    return minMs;
+  }
+
+  return Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 class MessageService {
   async sendSingle(
     userId: number,
@@ -157,7 +196,7 @@ class MessageService {
     let successCount = 0;
     let failedCount = 0;
 
-    for (const recipient of recipients) {
+    for (const [index, recipient] of recipients.entries()) {
       const content = resolveContent(recipient);
 
       try {
@@ -190,6 +229,10 @@ class MessageService {
           sendMode: 'batch',
           listIds: recipient.listIds
         });
+      }
+
+      if (index < recipients.length - 1) {
+        await wait(getRandomBatchDelayMs());
       }
     }
 

@@ -420,6 +420,9 @@ export function SendPage() {
                       <p className="mt-2">
                         O backend remove duplicidades automaticamente quando o mesmo contato aparece em mais de uma lista selecionada.
                       </p>
+                      <p className="mt-2">
+                        Os envios em lote também aplicam um intervalo automático entre mensagens para reduzir o risco de bloqueio.
+                      </p>
                     </div>
                   </>
                 ) : (
@@ -448,6 +451,9 @@ export function SendPage() {
                       </div>
                       <p className="mt-2">
                         Cada destinatário recebe uma mensagem aleatória do próprio grupo. A variável {'{nome}'} é preenchida automaticamente.
+                      </p>
+                      <p className="mt-2">
+                        O lote respeita um intervalo automático entre mensagens para reduzir o risco de bloqueio.
                       </p>
                     </div>
 

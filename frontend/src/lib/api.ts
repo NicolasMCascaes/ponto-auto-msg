@@ -40,6 +40,23 @@ export type MessageTemplate = {
   updatedAt: string;
 };
 
+export type MessageSequenceStep = {
+  id: number;
+  position: number;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MessageSequence = {
+  id: number;
+  title: string;
+  cooldownMs: number;
+  steps: MessageSequenceStep[];
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type MessageLog = {
   id: number;
   destinationNumber: string;
@@ -50,7 +67,7 @@ export type MessageLog = {
   contactId?: number;
   contactName?: string;
   batchId?: number;
-  sendMode: 'manual' | 'contact' | 'batch';
+  sendMode: 'manual' | 'contact' | 'batch' | 'sequence';
   listIds: number[];
   listNames: string[];
 };
@@ -88,6 +105,14 @@ export type MessageTemplateInput = {
   content: string;
 };
 
+export type MessageSequenceInput = {
+  title: string;
+  cooldownMs: number;
+  steps: Array<{
+    content: string;
+  }>;
+};
+
 export type SendSingleInput =
   | {
       text: string;
@@ -112,6 +137,13 @@ export type SendBatchInput =
       contactIds: number[];
       listIds: number[];
       text?: never;
+    }
+  | {
+      mode: 'sequence';
+      sequenceId: number;
+      contactIds: number[];
+      listIds: number[];
+      text?: never;
     };
 
 export type SendBatchResult = {
@@ -119,6 +151,10 @@ export type SendBatchResult = {
   totalTargets: number;
   successCount: number;
   failedCount: number;
+  mode: SendBatchInput['mode'];
+  totalSteps: number;
+  totalMessagesPlanned: number;
+  haltedContacts: number;
 };
 
 export type AuthUser = {
@@ -358,6 +394,46 @@ export const api = {
       }
 
       throw new Error(payload.error?.message ?? 'Falha ao excluir modelo de mensagem.');
+    }
+  },
+  getMessageSequences() {
+    return requestJson<ApiEnvelope<MessageSequence[]>>('/message-sequences');
+  },
+  createMessageSequence(input: MessageSequenceInput) {
+    return requestJson<ApiEnvelope<MessageSequence>>('/message-sequences', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(input)
+    });
+  },
+  updateMessageSequence(id: number, input: MessageSequenceInput) {
+    return requestJson<ApiEnvelope<MessageSequence>>(`/message-sequences/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(input)
+    });
+  },
+  async deleteMessageSequence(id: number) {
+    const response = await fetch(
+      buildApiUrl(`/message-sequences/${id}`),
+      withDefaultHeaders({
+        method: 'DELETE'
+      })
+    );
+
+    if (!response.ok) {
+      const raw = await response.text();
+      const payload = parseApiPayload(raw);
+
+      if (response.status === 401 && unauthorizedHandler) {
+        unauthorizedHandler();
+      }
+
+      throw new Error(payload.error?.message ?? 'Falha ao excluir sequencia de mensagens.');
     }
   },
   createContactList(input: ContactListInput) {

@@ -33,7 +33,7 @@ const routeTitles: Record<string, string> = {
   '/contacts': 'Agenda',
   '/lists': 'Listas',
   '/users': 'Usuários',
-  '/templates': 'Modelos de mensagem',
+  '/templates': 'Modelos e sequências',
   '/send': 'Envios',
   '/history': 'Histórico'
 };

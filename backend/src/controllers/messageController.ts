@@ -15,6 +15,7 @@ type SendBatchBody = {
   contactIds?: unknown;
   listIds?: unknown;
   text?: unknown;
+  sequenceId?: unknown;
 };
 
 type MessageQuery = {
@@ -184,7 +185,7 @@ export async function sendBatchMessagesController(
 ): Promise<void> {
   try {
     const userId = getAuthenticatedUserId(req);
-    const { mode, contactIds, listIds, text } = req.body;
+    const { mode, contactIds, listIds, text, sequenceId } = req.body;
 
     if (!Array.isArray(contactIds) || !Array.isArray(listIds)) {
       res.status(400).json({
@@ -233,6 +234,8 @@ export async function sendBatchMessagesController(
         ? 'manual'
         : mode === 'group-random'
           ? 'group-random'
+          : mode === 'sequence'
+            ? 'sequence'
           : null;
 
     if (!parsedMode) {
@@ -256,6 +259,34 @@ export async function sendBatchMessagesController(
       const result = await messageService.sendBatch(userId, {
         mode: 'manual',
         text: text.trim(),
+        contactIds: parsedContactIds,
+        listIds: parsedListIds
+      });
+
+      res.status(200).json({
+        message: 'Envio em lote concluido.',
+        data: result
+      });
+      return;
+    }
+
+    if (parsedMode === 'sequence') {
+      if (
+        typeof sequenceId !== 'number' ||
+        !Number.isInteger(sequenceId) ||
+        sequenceId <= 0
+      ) {
+        res.status(400).json({
+          error: {
+            message: "Payload invalido. Informe 'sequenceId' corretamente."
+          }
+        });
+        return;
+      }
+
+      const result = await messageService.sendBatch(userId, {
+        mode: 'sequence',
+        sequenceId,
         contactIds: parsedContactIds,
         listIds: parsedListIds
       });
@@ -299,6 +330,15 @@ export async function sendBatchMessagesController(
 
       if (error.message.includes('mensagens cadastradas')) {
         res.status(400).json({
+          error: {
+            message: error.message
+          }
+        });
+        return;
+      }
+
+      if (error.message.includes('Sequencia de mensagens nao encontrada')) {
+        res.status(404).json({
           error: {
             message: error.message
           }

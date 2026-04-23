@@ -16,6 +16,20 @@ export function normalizeNumberPreview(value: string) {
   return digits.length > 0 ? digits : 'Sem destino';
 }
 
+export function formatDurationMs(value: number) {
+  if (!Number.isFinite(value) || value < 0) {
+    return '0 segundos';
+  }
+
+  if (value > 0 && value % 60_000 === 0) {
+    const minutes = value / 60_000;
+    return `${minutes} minuto${minutes === 1 ? '' : 's'}`;
+  }
+
+  const seconds = Math.max(0, Math.round(value / 1_000));
+  return `${seconds} segundo${seconds === 1 ? '' : 's'}`;
+}
+
 export function getConnectionBadgeVariant(
   status?: ConnectionStatus
 ): 'default' | 'secondary' | 'destructive' | 'outline' {

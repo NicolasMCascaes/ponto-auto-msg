@@ -1,7 +1,7 @@
 import { database } from './database.js';
 
 export type MessageLogStatus = 'sent' | 'failed';
-export type MessageSendMode = 'manual' | 'contact' | 'batch';
+export type MessageSendMode = 'manual' | 'contact' | 'batch' | 'sequence';
 
 export type CreateMessageLogInput = {
   userId: number;

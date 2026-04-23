@@ -184,6 +184,39 @@ function createMessageTemplatesTable(): void {
   `);
 }
 
+function createMessageSequencesTables(): void {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS message_sequences (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      title TEXT NOT NULL COLLATE NOCASE,
+      cooldown_ms INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS message_sequence_steps (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      sequence_id INTEGER NOT NULL,
+      position INTEGER NOT NULL,
+      content TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (sequence_id) REFERENCES message_sequences(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_message_sequences_user_id
+      ON message_sequences(user_id);
+
+    CREATE INDEX IF NOT EXISTS idx_message_sequence_steps_sequence_id
+      ON message_sequence_steps(sequence_id);
+
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_message_sequence_steps_sequence_position
+      ON message_sequence_steps(sequence_id, position);
+  `);
+}
+
 function getLegacyDataOwnerId(): number | null {
   const statement = database.prepare(`
     SELECT id
@@ -387,5 +420,6 @@ if (shouldMigrateLegacyGlobalData()) {
 
 createUserScopedSchema();
 createMessageTemplatesTable();
+createMessageSequencesTables();
 
 export { database };

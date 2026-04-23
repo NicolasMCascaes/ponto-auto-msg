@@ -22,21 +22,39 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { normalizeNumberPreview } from '@/lib/formatters';
+import { formatDurationMs, normalizeNumberPreview } from '@/lib/formatters';
 import {
   getContactGroupFromNotes,
   getMessageTemplateGroupLabel
 } from '@/lib/message-template-groups';
 import { useAppData } from '@/providers/app-data-provider';
 
+type BatchMode = 'manual' | 'group-random' | 'sequence';
+
+function getBatchSuccessMessage(result: {
+  mode: BatchMode;
+  successCount: number;
+  failedCount: number;
+  totalMessagesPlanned: number;
+  haltedContacts: number;
+}) {
+  if (result.mode === 'sequence') {
+    return `Sequência concluída. ${result.successCount} envio(s) realizado(s), ${result.failedCount} falha(s), ${result.haltedContacts} contato(s) interrompido(s) de ${result.totalMessagesPlanned} envio(s) planejado(s).`;
+  }
+
+  return `Lote concluído. ${result.successCount} enviado(s), ${result.failedCount} falha(s).`;
+}
+
 export function SendPage() {
-  const { contacts, lists, messageTemplates, status, sendBatch, sendSingle } = useAppData();
+  const { contacts, lists, messageSequences, messageTemplates, status, sendBatch, sendSingle } =
+    useAppData();
   const [singleMode, setSingleMode] = useState<'contact' | 'manual'>('contact');
   const [singleContactId, setSingleContactId] = useState<string>('none');
   const [manualNumber, setManualNumber] = useState('');
   const [singleText, setSingleText] = useState('');
-  const [batchMode, setBatchMode] = useState<'manual' | 'group-random'>('manual');
+  const [batchMode, setBatchMode] = useState<BatchMode>('manual');
   const [batchText, setBatchText] = useState('');
+  const [selectedSequenceId, setSelectedSequenceId] = useState<string>('none');
   const [selectedContactIds, setSelectedContactIds] = useState<number[]>([]);
   const [selectedListIds, setSelectedListIds] = useState<number[]>([]);
   const [isSendingSingle, setIsSendingSingle] = useState(false);
@@ -94,6 +112,18 @@ export function SendPage() {
     return missing;
   }, [batchGroupCounts, templateCounts]);
 
+  const selectedSequence = useMemo(() => {
+    const parsedId = Number.parseInt(selectedSequenceId, 10);
+
+    if (!Number.isInteger(parsedId) || parsedId <= 0) {
+      return null;
+    }
+
+    return messageSequences.find((sequence) => sequence.id === parsedId) ?? null;
+  }, [messageSequences, selectedSequenceId]);
+
+  const plannedSequenceMessages = selectedSequence ? batchTargets.length * selectedSequence.steps.length : 0;
+
   function toggleContact(contactId: number) {
     setSelectedContactIds((current) =>
       current.includes(contactId)
@@ -133,6 +163,7 @@ export function SendPage() {
       }
 
       setSingleText('');
+
       if (singleMode === 'manual') {
         setManualNumber('');
       }
@@ -155,17 +186,22 @@ export function SendPage() {
               contactIds: selectedContactIds,
               listIds: selectedListIds
             })
-          : await sendBatch({
-              mode: 'group-random',
-              contactIds: selectedContactIds,
-              listIds: selectedListIds
-            });
+          : batchMode === 'group-random'
+            ? await sendBatch({
+                mode: 'group-random',
+                contactIds: selectedContactIds,
+                listIds: selectedListIds
+              })
+            : await sendBatch({
+                mode: 'sequence',
+                sequenceId: selectedSequence!.id,
+                contactIds: selectedContactIds,
+                listIds: selectedListIds
+              });
 
-      toast.success(
-        payload.message ??
-          `Lote concluido. ${payload.data.successCount} enviado(s), ${payload.data.failedCount} falha(s).`
-      );
+      toast.success(getBatchSuccessMessage(payload.data));
       setBatchText('');
+      setSelectedSequenceId('none');
       setSelectedContactIds([]);
       setSelectedListIds([]);
       setBatchMode('manual');
@@ -182,7 +218,7 @@ export function SendPage() {
       <PageHeader
         eyebrow="Envio"
         title="Envie mensagens com confiança"
-        description="Escolha um contato da agenda, informe um número avulso ou monte um envio em lote manual ou por grupo em poucos passos."
+        description="Escolha um contato da agenda, informe um número avulso ou monte um envio em lote manual, por grupo ou em sequência."
       />
 
       {!status?.isConnected ? (
@@ -190,7 +226,7 @@ export function SendPage() {
           <CardContent className="flex items-start gap-3 p-5 text-sm text-destructive">
             <AlertTriangleIcon className="mt-0.5 size-5 shrink-0" />
             <div>
-              <p className="font-medium">WhatsApp ainda nao esta conectado</p>
+              <p className="font-medium">WhatsApp ainda não está conectado</p>
               <p className="mt-1 text-destructive/80">
                 Conecte sua sessão antes de iniciar novos envios.
               </p>
@@ -215,7 +251,10 @@ export function SendPage() {
               <CardContent className="space-y-5">
                 <div className="grid gap-2">
                   <Label>Como você quer enviar?</Label>
-                  <Select value={singleMode} onValueChange={(value) => setSingleMode(value as typeof singleMode)}>
+                  <Select
+                    value={singleMode}
+                    onValueChange={(value) => setSingleMode(value as typeof singleMode)}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -260,7 +299,7 @@ export function SendPage() {
 
                 <div className="rounded-2xl border border-border/70 bg-background/70 p-4 text-sm text-muted-foreground">
                   {singleMode === 'contact'
-                    ? 'Use um contato já salvo para manter seu histórico organizado e reutilizar dados com facilidade.'
+                    ? 'Use um contato salvo para manter seu histórico organizado e reutilizar dados com facilidade.'
                     : 'O envio avulso é ideal para mensagens rápidas. Se quiser reutilizar esse número depois, salve-o na agenda.'}
                 </div>
               </CardContent>
@@ -371,13 +410,17 @@ export function SendPage() {
               <CardContent className="space-y-4">
                 <div className="grid gap-2">
                   <Label>Modo do lote</Label>
-                  <Select value={batchMode} onValueChange={(value) => setBatchMode(value as typeof batchMode)}>
+                  <Select
+                    value={batchMode}
+                    onValueChange={(value) => setBatchMode(value as BatchMode)}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="manual">Manual</SelectItem>
                       <SelectItem value="group-random">Por grupo</SelectItem>
+                      <SelectItem value="sequence">Sequência</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -405,7 +448,7 @@ export function SendPage() {
                         id="batch-text"
                         value={batchText}
                         onChange={(event) => setBatchText(event.target.value)}
-                        placeholder="Escreva a mensagem que sera replicada para todos os destinos deduplicados."
+                        placeholder="Escreva a mensagem que será replicada para todos os destinos deduplicados."
                         className="min-h-44"
                         maxLength={500}
                       />
@@ -418,28 +461,32 @@ export function SendPage() {
                         Destinos deduplicados
                       </div>
                       <p className="mt-2">
-                        O backend remove duplicidades automaticamente quando o mesmo contato aparece em mais de uma lista selecionada.
+                        O backend remove duplicidades automaticamente quando o mesmo contato aparece
+                        em mais de uma lista selecionada.
                       </p>
                       <p className="mt-2">
-                        Os envios em lote também aplicam um intervalo automático entre mensagens para reduzir o risco de bloqueio.
+                        Os envios em lote tambem aplicam um intervalo automatico entre mensagens
+                        para reduzir o risco de bloqueio.
                       </p>
                     </div>
                   </>
-                ) : (
+                ) : null}
+
+                {batchMode === 'group-random' ? (
                   <>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
                         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Professores</p>
                         <p className="mt-2 text-xl font-semibold">{batchGroupCounts.teacher}</p>
                         <p className="mt-2 text-sm text-muted-foreground">
-                          {templateCounts.teacher} modelo(s) disponível(is)
+                          {templateCounts.teacher} modelo(s) disponivel(is)
                         </p>
                       </div>
                       <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
-                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Funcionários</p>
+                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Funcionarios</p>
                         <p className="mt-2 text-xl font-semibold">{batchGroupCounts.staff}</p>
                         <p className="mt-2 text-sm text-muted-foreground">
-                          {templateCounts.staff} modelo(s) disponível(is)
+                          {templateCounts.staff} modelo(s) disponivel(is)
                         </p>
                       </div>
                     </div>
@@ -450,10 +497,12 @@ export function SendPage() {
                         Sorteio por contato
                       </div>
                       <p className="mt-2">
-                        Cada destinatário recebe uma mensagem aleatória do próprio grupo. A variável {'{nome}'} é preenchida automaticamente.
+                        Cada destinatário recebe uma mensagem aleatória do próprio grupo. A
+                        variável {'{nome}'} é preenchida automaticamente.
                       </p>
                       <p className="mt-2">
-                        O lote respeita um intervalo automático entre mensagens para reduzir o risco de bloqueio.
+                        O lote respeita um intervalo automatico entre mensagens para reduzir o
+                        risco de bloqueio.
                       </p>
                     </div>
 
@@ -467,7 +516,93 @@ export function SendPage() {
                       </div>
                     ) : null}
                   </>
-                )}
+                ) : null}
+
+                {batchMode === 'sequence' ? (
+                  <>
+                    <div className="grid gap-2">
+                      <Label>Sequência</Label>
+                      <Select value={selectedSequenceId} onValueChange={setSelectedSequenceId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma sequência" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Selecione uma sequência</SelectItem>
+                          {messageSequences.map((sequence) => (
+                            <SelectItem key={sequence.id} value={String(sequence.id)}>
+                              {sequence.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {selectedSequence ? (
+                      <>
+                        <div className="grid gap-3 sm:grid-cols-3">
+                          <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
+                            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Etapas</p>
+                            <p className="mt-2 text-xl font-semibold">{selectedSequence.steps.length}</p>
+                          </div>
+                          <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
+                            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Cooldown</p>
+                            <p className="mt-2 text-xl font-semibold">
+                              {formatDurationMs(selectedSequence.cooldownMs)}
+                            </p>
+                          </div>
+                          <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
+                            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                              Envios planejados
+                            </p>
+                            <p className="mt-2 text-xl font-semibold">{plannedSequenceMessages}</p>
+                          </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-border/70 bg-background/70 p-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2 font-medium text-foreground">
+                            <UsersIcon className="size-4 text-primary" />
+                            Execução por etapas
+                          </div>
+                          <p className="mt-2">
+                            O sistema envia a etapa 1 para todos os contatos elegíveis, espera o
+                            cooldown configurado e segue para a próxima etapa.
+                          </p>
+                          <p className="mt-2">
+                            Se uma etapa falhar para um contato, esse contato para de receber as
+                            próximas mensagens, mas os demais continuam normalmente.
+                          </p>
+                        </div>
+
+                        <ScrollArea className="h-56 rounded-2xl border border-border/70 bg-background/70 p-4">
+                          <div className="space-y-3">
+                            {selectedSequence.steps.map((step) => (
+                              <div
+                                key={step.id}
+                                className="rounded-2xl border border-border/70 bg-card/80 p-4"
+                              >
+                                <div className="flex items-center justify-between gap-2">
+                                  <Badge variant="outline">Etapa {step.position}</Badge>
+                                  <span className="text-xs text-muted-foreground">
+                                    {step.content.length}/500
+                                  </span>
+                                </div>
+                                <p className="mt-3 whitespace-pre-wrap text-sm text-foreground">
+                                  {step.content}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                      </>
+                    ) : (
+                      <div className="rounded-2xl border border-border/70 bg-background/70 p-4 text-sm text-muted-foreground">
+                        {messageSequences.length === 0
+                          ? 'Nenhuma sequência cadastrada. Crie uma em Modelos antes de enviar.'
+                          : 'Selecione uma sequência para ver as etapas, o cooldown e o total planejado.'}
+                      </div>
+                    )}
+                  </>
+                ) : null}
 
                 <Button
                   className="w-full"
@@ -476,7 +611,9 @@ export function SendPage() {
                     batchTargets.length === 0 ||
                     (batchMode === 'manual'
                       ? batchText.trim().length === 0
-                      : missingTemplateGroups.length > 0)
+                      : batchMode === 'group-random'
+                        ? missingTemplateGroups.length > 0
+                        : !selectedSequence)
                   }
                   onClick={() => setIsBatchConfirmOpen(true)}
                 >
@@ -496,7 +633,9 @@ export function SendPage() {
             <AlertDialogDescription>
               {batchMode === 'manual'
                 ? `Esta mensagem será enviada para ${batchTargets.length} contato(s) únicos.`
-                : `Este lote será enviado para ${batchTargets.length} contato(s) únicos com sorteio individual por grupo.`}
+                : batchMode === 'group-random'
+                  ? `Este lote será enviado para ${batchTargets.length} contato(s) únicos com sorteio individual por grupo.`
+                  : `A sequência "${selectedSequence?.title ?? ''}" com ${selectedSequence?.steps.length ?? 0} etapa(s) será enviada para ${batchTargets.length} contato(s) únicos, com até ${plannedSequenceMessages} envio(s) planejado(s) e cooldown de ${formatDurationMs(selectedSequence?.cooldownMs ?? 0)} entre etapas.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

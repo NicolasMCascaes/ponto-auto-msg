@@ -91,7 +91,8 @@ function getStatusLabel(
 export function AppSidebar() {
   const location = useLocation();
   const { user } = useAuth();
-  const { contacts, lists, messageTemplates, recentMessages, status } = useAppData();
+  const { contacts, lists, messageSequences, messageTemplates, recentMessages, status } =
+    useAppData();
   const visibleNavigationItems = navigationItems.filter((item) => {
     return (item.href !== '/templates' && item.href !== '/users') || user?.role === 'admin';
   });
@@ -138,7 +139,7 @@ export function AppSidebar() {
                   ) : null}
                   {item.href === '/lists' ? <SidebarMenuBadge>{lists.length}</SidebarMenuBadge> : null}
                   {item.href === '/templates' ? (
-                    <SidebarMenuBadge>{messageTemplates.length}</SidebarMenuBadge>
+                    <SidebarMenuBadge>{messageTemplates.length + messageSequences.length}</SidebarMenuBadge>
                   ) : null}
                   {item.href === '/history' ? (
                     <SidebarMenuBadge>{recentMessages.length}</SidebarMenuBadge>

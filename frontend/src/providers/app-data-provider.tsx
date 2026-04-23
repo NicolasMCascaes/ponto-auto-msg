@@ -16,6 +16,8 @@ import {
   type ContactInput,
   type ContactListInput,
   type ContactListSummary,
+  type MessageSequence,
+  type MessageSequenceInput,
   type MessageTemplate,
   type MessageTemplateInput,
   type MessageFilters,
@@ -31,6 +33,7 @@ type AppDataContextValue = {
   contacts: Contact[];
   lists: ContactListSummary[];
   messageTemplates: MessageTemplate[];
+  messageSequences: MessageSequence[];
   recentMessages: MessageLog[];
   isBooting: boolean;
   refreshCoreData: (options?: { silent?: boolean }) => Promise<void>;
@@ -38,6 +41,7 @@ type AppDataContextValue = {
   refreshContacts: (filters?: ContactFilters) => Promise<Contact[]>;
   refreshLists: () => Promise<ContactListSummary[]>;
   refreshMessageTemplates: () => Promise<MessageTemplate[]>;
+  refreshMessageSequences: () => Promise<MessageSequence[]>;
   refreshRecentMessages: (limit?: number) => Promise<MessageLog[]>;
   loadMessages: (filters?: MessageFilters) => Promise<MessageLog[]>;
   connectWhatsapp: () => Promise<{ message?: string; status?: ConnectionStatus }>;
@@ -51,6 +55,9 @@ type AppDataContextValue = {
   createMessageTemplate: (input: MessageTemplateInput) => Promise<MessageTemplate>;
   updateMessageTemplate: (id: number, input: MessageTemplateInput) => Promise<MessageTemplate>;
   deleteMessageTemplate: (id: number) => Promise<void>;
+  createMessageSequence: (input: MessageSequenceInput) => Promise<MessageSequence>;
+  updateMessageSequence: (id: number, input: MessageSequenceInput) => Promise<MessageSequence>;
+  deleteMessageSequence: (id: number) => Promise<void>;
   sendSingle: (input: SendSingleInput) => Promise<{ message?: string }>;
   sendBatch: (input: SendBatchInput) => Promise<{ message?: string; data: SendBatchResult }>;
 };
@@ -67,6 +74,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [lists, setLists] = useState<ContactListSummary[]>([]);
   const [messageTemplates, setMessageTemplates] = useState<MessageTemplate[]>([]);
+  const [messageSequences, setMessageSequences] = useState<MessageSequence[]>([]);
   const [recentMessages, setRecentMessages] = useState<MessageLog[]>([]);
   const [isBooting, setIsBooting] = useState(true);
 
@@ -119,6 +127,24 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     return nextTemplates;
   }, [user?.role]);
 
+  const refreshMessageSequences = useCallback(async () => {
+    if (user?.role !== 'admin') {
+      startTransition(() => {
+        setMessageSequences([]);
+      });
+      return [];
+    }
+
+    const payload = await api.getMessageSequences();
+    const nextSequences = payload.data ?? [];
+
+    startTransition(() => {
+      setMessageSequences(nextSequences);
+    });
+
+    return nextSequences;
+  }, [user?.role]);
+
   const refreshRecentMessages = useCallback(async (limit = RECENT_MESSAGES_LIMIT) => {
     const payload = await api.getRecentMessages(limit);
     const nextMessages = payload.data ?? [];
@@ -143,9 +169,17 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       refreshContacts(),
       refreshLists(),
       refreshMessageTemplates(),
+      refreshMessageSequences(),
       refreshRecentMessages()
     ]);
-  }, [refreshContacts, refreshLists, refreshMessageTemplates, refreshRecentMessages, refreshStatus]);
+  }, [
+    refreshContacts,
+    refreshLists,
+    refreshMessageSequences,
+    refreshMessageTemplates,
+    refreshRecentMessages,
+    refreshStatus
+  ]);
 
   const connectWhatsapp = useCallback(async () => {
     const payload = await api.connectWhatsapp();
@@ -253,6 +287,32 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     [refreshMessageTemplates]
   );
 
+  const createMessageSequence = useCallback(
+    async (input: MessageSequenceInput) => {
+      const payload = await api.createMessageSequence(input);
+      await refreshMessageSequences();
+      return payload.data;
+    },
+    [refreshMessageSequences]
+  );
+
+  const updateMessageSequence = useCallback(
+    async (id: number, input: MessageSequenceInput) => {
+      const payload = await api.updateMessageSequence(id, input);
+      await refreshMessageSequences();
+      return payload.data;
+    },
+    [refreshMessageSequences]
+  );
+
+  const deleteMessageSequence = useCallback(
+    async (id: number) => {
+      await api.deleteMessageSequence(id);
+      await refreshMessageSequences();
+    },
+    [refreshMessageSequences]
+  );
+
   const sendSingle = useCallback(
     async (input: SendSingleInput) => {
       const payload = await api.sendMessage(input);
@@ -326,6 +386,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       contacts,
       lists,
       messageTemplates,
+      messageSequences,
       recentMessages,
       isBooting,
       refreshCoreData,
@@ -333,6 +394,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       refreshContacts,
       refreshLists,
       refreshMessageTemplates,
+      refreshMessageSequences,
       refreshRecentMessages,
       loadMessages,
       connectWhatsapp,
@@ -346,6 +408,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       createMessageTemplate,
       updateMessageTemplate,
       deleteMessageTemplate,
+      createMessageSequence,
+      updateMessageSequence,
+      deleteMessageSequence,
       sendSingle,
       sendBatch
     }),
@@ -354,18 +419,22 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       contacts,
       createContact,
       createList,
+      createMessageSequence,
       createMessageTemplate,
       deleteContact,
       deleteList,
+      deleteMessageSequence,
       deleteMessageTemplate,
       isBooting,
       lists,
       loadMessages,
+      messageSequences,
       messageTemplates,
       recentMessages,
       refreshContacts,
       refreshCoreData,
       refreshLists,
+      refreshMessageSequences,
       refreshMessageTemplates,
       refreshRecentMessages,
       refreshStatus,
@@ -375,6 +444,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       status,
       updateContact,
       updateList,
+      updateMessageSequence,
       updateMessageTemplate
     ]
   );

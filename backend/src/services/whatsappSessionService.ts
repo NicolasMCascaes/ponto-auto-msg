@@ -4,9 +4,11 @@ import { fileURLToPath } from 'node:url';
 import makeWASocket, {
   DisconnectReason,
   fetchLatestBaileysVersion,
+  type BaileysEventMap,
   type ConnectionState,
   useMultiFileAuthState
 } from '@whiskeysockets/baileys';
+import { whatsappAiAutomationService } from './whatsappAiAutomationService.js';
 
 export type WhatsappConnectionState =
   | 'idle'
@@ -87,6 +89,7 @@ class WhatsappSessionService {
     if (currentSocket) {
       currentSocket.ev.removeAllListeners('creds.update');
       currentSocket.ev.removeAllListeners('connection.update');
+      currentSocket.ev.removeAllListeners('messages.upsert');
 
       try {
         await currentSocket.logout();
@@ -118,11 +121,15 @@ class WhatsappSessionService {
   }
 
   async sendTextMessage(number: string, text: string): Promise<WhatsappSendMessageResult> {
+    const jid = `${number}@s.whatsapp.net`;
+    return this.sendTextMessageToJid(jid, text);
+  }
+
+  async sendTextMessageToJid(jid: string, text: string): Promise<WhatsappSendMessageResult> {
     if (!this.socket || !this.status.isConnected) {
       throw new Error('Sessao WhatsApp nao esta conectada. Conecte antes de enviar mensagens.');
     }
 
-    const jid = `${number}@s.whatsapp.net`;
     const sentMessage = await this.socket.sendMessage(jid, { text });
 
     if (!sentMessage?.key?.id) {
@@ -171,6 +178,20 @@ class WhatsappSessionService {
       this.socket = socket;
 
       socket.ev.on('creds.update', saveCreds);
+      socket.ev.on(
+        'messages.upsert',
+        (event: BaileysEventMap['messages.upsert']) => {
+          if (generation !== this.connectionGeneration) {
+            return;
+          }
+
+          void whatsappAiAutomationService.handleMessagesUpsert(event, {
+            sendTextMessageToJid: async (jid, text) => {
+              await this.sendTextMessageToJid(jid, text);
+            }
+          });
+        }
+      );
       socket.ev.on('connection.update', (update: Partial<ConnectionState>) => {
         if (generation !== this.connectionGeneration) {
           return;

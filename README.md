@@ -37,7 +37,8 @@ Além disso, ele resolve uma necessidade específica da operação:
 - segmentação por listas para montar lotes;
 - modelos de mensagem por grupo, disponíveis apenas para administradores;
 - histórico de mensagens enviadas e falhas;
-- envio manual e envio em lote com variação automática de texto.
+- envio manual e envio em lote com variação automática de texto;
+- automação opcional de respostas com IA via comando `/4.0 ...` no WhatsApp.
 
 ## Perfis de acesso
 
@@ -97,7 +98,29 @@ JWT_EXPIRES_IN=7d
 CORS_ORIGINS=
 BATCH_SEND_DELAY_MIN_MS=4000
 BATCH_SEND_DELAY_MAX_MS=7000
+WHATSAPP_AI_AUTOREPLY_ENABLED=false
+GEMINI_API_KEY=change-this-key
+GEMINI_MODEL=gemini-2.5-flash-lite
+GEMINI_FALLBACK_MODELS=gemini-2.5-flash,gemma-4-26b-a4b-it,gemma-4-31b-it
+GEMINI_API_TIMEOUT_MS=10000
 ```
+
+### Automação `/4.0` com Gemini
+
+- `WHATSAPP_AI_AUTOREPLY_ENABLED=false`: liga ou desliga a resposta automática.
+- `GEMINI_API_KEY`: chave da API do Gemini.
+- `GEMINI_MODEL`: modelo usado pelo backend. O padrão recomendado é `gemini-2.5-flash-lite`.
+- `GEMINI_FALLBACK_MODELS`: modelos extras tentados automaticamente quando o modelo principal falhar. Exemplo recomendado: `gemini-2.5-flash,gemma-4-26b-a4b-it,gemma-4-31b-it`.
+- `GEMINI_API_TIMEOUT_MS`: tempo limite da chamada ao Gemini em milissegundos.
+
+Com a automação ligada, o backend passa a observar mensagens recebidas em conversas privadas 1:1. Quando a mensagem começar com `/4.0`, o restante do texto é enviado ao Gemini e a resposta volta para o mesmo contato no WhatsApp.
+
+Exemplos:
+
+- `/4.0 o que é computação em nuvem?`
+- `/4.0 explique IoT de forma simples`
+
+Se o Gemini falhar por indisponibilidade, timeout, rate limit ou erro inesperado, o backend tenta os modelos configurados em `GEMINI_FALLBACK_MODELS` antes de responder com a mensagem padrão amigável. O motivo fica registrado no backend, sem quebrar a sessão do WhatsApp. Modelos Gemma costumam ser mais lentos, então o backend usa um timeout maior para eles automaticamente.
 
 ### Frontend
 

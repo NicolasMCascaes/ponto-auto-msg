@@ -799,7 +799,7 @@ export function MessageTemplatesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir modelo?</AlertDialogTitle>
             <AlertDialogDescription>
-              O texto deixara de participar dos sorteios por grupo.
+              O texto deixará de participar dos sorteios por grupo.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

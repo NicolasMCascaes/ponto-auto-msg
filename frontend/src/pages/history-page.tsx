@@ -17,7 +17,7 @@ import { useAppData } from '@/providers/app-data-provider';
 function getSendModeLabel(mode: MessageLog['sendMode']) {
   switch (mode) {
     case 'sequence':
-      return 'Sequencia';
+      return 'Sequência';
     case 'batch':
       return 'Lote';
     case 'contact':

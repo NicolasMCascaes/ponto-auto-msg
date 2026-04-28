@@ -433,7 +433,7 @@ export const api = {
         unauthorizedHandler();
       }
 
-      throw new Error(payload.error?.message ?? 'Falha ao excluir sequencia de mensagens.');
+      throw new Error(payload.error?.message ?? 'Falha ao excluir sequência de mensagens.');
     }
   },
   createContactList(input: ContactListInput) {

@@ -465,7 +465,7 @@ export function SendPage() {
                         em mais de uma lista selecionada.
                       </p>
                       <p className="mt-2">
-                        Os envios em lote tambem aplicam um intervalo automatico entre mensagens
+                        Os envios em lote também aplicam um intervalo automático entre mensagens
                         para reduzir o risco de bloqueio.
                       </p>
                     </div>
@@ -479,14 +479,14 @@ export function SendPage() {
                         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Professores</p>
                         <p className="mt-2 text-xl font-semibold">{batchGroupCounts.teacher}</p>
                         <p className="mt-2 text-sm text-muted-foreground">
-                          {templateCounts.teacher} modelo(s) disponivel(is)
+                          {templateCounts.teacher} modelo(s) disponível(is)
                         </p>
                       </div>
                       <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
-                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Funcionarios</p>
+                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Funcionários</p>
                         <p className="mt-2 text-xl font-semibold">{batchGroupCounts.staff}</p>
                         <p className="mt-2 text-sm text-muted-foreground">
-                          {templateCounts.staff} modelo(s) disponivel(is)
+                          {templateCounts.staff} modelo(s) disponível(is)
                         </p>
                       </div>
                     </div>
@@ -501,7 +501,7 @@ export function SendPage() {
                         variável {'{nome}'} é preenchida automaticamente.
                       </p>
                       <p className="mt-2">
-                        O lote respeita um intervalo automatico entre mensagens para reduzir o
+                        O lote respeita um intervalo automático entre mensagens para reduzir o
                         risco de bloqueio.
                       </p>
                     </div>

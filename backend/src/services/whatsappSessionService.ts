@@ -219,6 +219,7 @@ class WhatsappSessionService {
     try {
       mkdirSync(authDir, { recursive: true });
       const { state, saveCreds } = await useMultiFileAuthState(authDir);
+      await this.clearStalePairingCredentials(state.creds, saveCreds);
       const { version } = await fetchLatestBaileysVersion();
 
       const socket = makeWASocket({
@@ -254,7 +255,7 @@ class WhatsappSessionService {
 
         const { connection, lastDisconnect, qr } = update;
 
-        if (connection === 'connecting' || qr) {
+        if (qr) {
           this.markPairingReady(generation);
         }
 
@@ -397,6 +398,7 @@ class WhatsappSessionService {
     }
 
     await this.waitForPairingReady(generation);
+    await socket.waitForSocketOpen();
 
     if (this.status.isConnected || socket.authState.creds.registered) {
       throw new Error('Sessao WhatsApp ja esta conectada.');
@@ -422,6 +424,19 @@ class WhatsappSessionService {
       pairingCode,
       status: this.getStatus()
     };
+  }
+
+  private async clearStalePairingCredentials(
+    creds: Awaited<ReturnType<typeof useMultiFileAuthState>>['state']['creds'],
+    saveCreds: () => Promise<void>
+  ): Promise<void> {
+    if (creds.registered || (!creds.pairingCode && creds.me?.name !== '~')) {
+      return;
+    }
+
+    creds.pairingCode = undefined;
+    creds.me = undefined;
+    await saveCreds();
   }
 
   private waitForPairingReady(generation: number, timeoutMs = 15_000): Promise<void> {

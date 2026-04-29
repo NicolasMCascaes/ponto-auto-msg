@@ -5,7 +5,16 @@ export type ConnectionStatus = {
   lastError?: string;
   lastDisconnectCode?: number;
   qr?: string;
+  pairingCode?: string;
+  pairingPhoneNumber?: string;
+  pairingRequestedAt?: string;
   reconnectScheduled?: boolean;
+};
+
+export type WhatsappPairingCodeResponse = {
+  message?: string;
+  pairingCode?: string;
+  status?: ConnectionStatus;
 };
 
 export type ContactListSummary = {
@@ -300,6 +309,15 @@ export const api = {
   connectWhatsapp() {
     return requestJson<{ message?: string; status?: ConnectionStatus }>('/whatsapp/connect', {
       method: 'POST'
+    });
+  },
+  requestWhatsappPairingCode(phoneNumber: string) {
+    return requestJson<WhatsappPairingCodeResponse>('/whatsapp/pairing-code', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ phoneNumber })
     });
   },
   resetWhatsapp() {

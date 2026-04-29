@@ -24,7 +24,8 @@ import {
   type MessageLog,
   type SendBatchInput,
   type SendBatchResult,
-  type SendSingleInput
+  type SendSingleInput,
+  type WhatsappPairingCodeResponse
 } from '@/lib/api';
 import { useAuth } from '@/providers/auth-provider';
 
@@ -45,6 +46,7 @@ type AppDataContextValue = {
   refreshRecentMessages: (limit?: number) => Promise<MessageLog[]>;
   loadMessages: (filters?: MessageFilters) => Promise<MessageLog[]>;
   connectWhatsapp: () => Promise<{ message?: string; status?: ConnectionStatus }>;
+  requestWhatsappPairingCode: (phoneNumber: string) => Promise<WhatsappPairingCodeResponse>;
   resetWhatsapp: () => Promise<{ message?: string; status?: ConnectionStatus }>;
   createContact: (input: ContactInput) => Promise<Contact>;
   updateContact: (id: number, input: ContactInput) => Promise<Contact>;
@@ -194,6 +196,23 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
     return payload;
   }, [refreshStatus]);
+
+  const requestWhatsappPairingCode = useCallback(
+    async (phoneNumber: string) => {
+      const payload = await api.requestWhatsappPairingCode(phoneNumber);
+
+      if (payload.status) {
+        startTransition(() => {
+          setStatus(payload.status ?? null);
+        });
+      } else {
+        await refreshStatus();
+      }
+
+      return payload;
+    },
+    [refreshStatus]
+  );
 
   const resetWhatsapp = useCallback(async () => {
     const payload = await api.resetWhatsapp();
@@ -398,6 +417,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       refreshRecentMessages,
       loadMessages,
       connectWhatsapp,
+      requestWhatsappPairingCode,
       resetWhatsapp,
       createContact,
       updateContact,
@@ -438,6 +458,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       refreshMessageTemplates,
       refreshRecentMessages,
       refreshStatus,
+      requestWhatsappPairingCode,
       resetWhatsapp,
       sendBatch,
       sendSingle,

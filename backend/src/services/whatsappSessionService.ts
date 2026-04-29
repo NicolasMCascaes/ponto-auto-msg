@@ -24,12 +24,20 @@ export type WhatsappSessionStatus = {
   lastError?: string;
   lastDisconnectCode?: number;
   qr?: string;
+  pairingCode?: string;
+  pairingPhoneNumber?: string;
+  pairingRequestedAt?: string;
   reconnectScheduled?: boolean;
 };
 
 export type WhatsappSendMessageResult = {
   jid: string;
   messageId: string;
+};
+
+export type WhatsappPairingCodeResult = {
+  pairingCode?: string;
+  status: WhatsappSessionStatus;
 };
 
 type DisconnectDetails = {
@@ -60,9 +68,17 @@ class WhatsappSessionService {
   private isStarting = false;
   private shouldReconnect = false;
   private connectionGeneration = 0;
+  private startPromise?: Promise<WhatsappSessionStatus>;
+  private pairingCodeRequest?: Promise<WhatsappPairingCodeResult>;
+  private pairingReadyGeneration?: number;
+  private pairingReadyWaiters = new Map<number, Array<() => void>>();
 
   async startConnection(): Promise<WhatsappSessionStatus> {
     this.shouldReconnect = true;
+
+    if (this.startPromise) {
+      return this.startPromise;
+    }
 
     if (
       this.isStarting ||
@@ -76,7 +92,7 @@ class WhatsappSessionService {
       return this.getStatus();
     }
 
-    return this.initializeSocket();
+    return this.beginInitializeSocket();
   }
 
   async resetConnection(): Promise<WhatsappSessionStatus> {
@@ -114,10 +130,46 @@ class WhatsappSessionService {
       lastError: undefined,
       lastDisconnectCode: undefined,
       qr: undefined,
+      pairingCode: undefined,
+      pairingPhoneNumber: undefined,
+      pairingRequestedAt: undefined,
       reconnectScheduled: false
     });
 
     return this.getStatus();
+  }
+
+  async requestPairingCode(phoneNumber: string): Promise<WhatsappPairingCodeResult> {
+    if (this.pairingCodeRequest) {
+      return this.pairingCodeRequest;
+    }
+
+    const request = this.createPairingCode(phoneNumber)
+      .catch((error) => {
+        if (error instanceof Error && error.message === 'Sessao WhatsApp ja esta conectada.') {
+          throw error;
+        }
+
+        this.updateStatus({
+          pairingCode: undefined,
+          pairingPhoneNumber: undefined,
+          pairingRequestedAt: undefined,
+          lastError:
+            error instanceof Error
+              ? error.message
+              : 'Falha ao gerar codigo de pareamento.'
+        });
+
+        throw error;
+      })
+      .finally(() => {
+        if (this.pairingCodeRequest === request) {
+          this.pairingCodeRequest = undefined;
+        }
+      });
+
+    this.pairingCodeRequest = request;
+    return request;
   }
 
   async sendTextMessage(number: string, text: string): Promise<WhatsappSendMessageResult> {
@@ -158,6 +210,9 @@ class WhatsappSessionService {
       lastError: undefined,
       lastDisconnectCode: undefined,
       qr: undefined,
+      pairingCode: undefined,
+      pairingPhoneNumber: undefined,
+      pairingRequestedAt: undefined,
       reconnectScheduled: false
     });
 
@@ -199,6 +254,10 @@ class WhatsappSessionService {
 
         const { connection, lastDisconnect, qr } = update;
 
+        if (connection === 'connecting' || qr) {
+          this.markPairingReady(generation);
+        }
+
         if (qr) {
           this.updateStatus({
             state: 'connecting',
@@ -216,6 +275,9 @@ class WhatsappSessionService {
             lastError: undefined,
             lastDisconnectCode: undefined,
             qr: undefined,
+            pairingCode: undefined,
+            pairingPhoneNumber: undefined,
+            pairingRequestedAt: undefined,
             reconnectScheduled: false
           });
         }
@@ -239,6 +301,9 @@ class WhatsappSessionService {
                 details.message ??
                 'Conexao interrompida temporariamente. Tentando recuperar a sessao.',
               qr: undefined,
+              pairingCode: undefined,
+              pairingPhoneNumber: undefined,
+              pairingRequestedAt: undefined,
               reconnectScheduled: true
             });
 
@@ -251,6 +316,9 @@ class WhatsappSessionService {
             isConnected: false,
             lastDisconnectCode: details.code,
             qr: undefined,
+            pairingCode: undefined,
+            pairingPhoneNumber: undefined,
+            pairingRequestedAt: undefined,
             reconnectScheduled: false,
             lastError: isLoggedOut
               ? 'Sessao desconectada (logged out). Gere uma nova sessao para autenticar novamente.'
@@ -266,6 +334,9 @@ class WhatsappSessionService {
         isConnected: false,
         lastDisconnectCode: undefined,
         qr: undefined,
+        pairingCode: undefined,
+        pairingPhoneNumber: undefined,
+        pairingRequestedAt: undefined,
         reconnectScheduled: false,
         lastError: error instanceof Error ? error.message : 'Falha ao iniciar sessao WhatsApp'
       });
@@ -273,6 +344,139 @@ class WhatsappSessionService {
       throw error;
     } finally {
       this.isStarting = false;
+    }
+  }
+
+  private beginInitializeSocket(): Promise<WhatsappSessionStatus> {
+    if (this.startPromise) {
+      return this.startPromise;
+    }
+
+    const startPromise = this.initializeSocket().finally(() => {
+      if (this.startPromise === startPromise) {
+        this.startPromise = undefined;
+      }
+    });
+
+    this.startPromise = startPromise;
+    return startPromise;
+  }
+
+  private async createPairingCode(phoneNumber: string): Promise<WhatsappPairingCodeResult> {
+    this.shouldReconnect = true;
+
+    if (this.status.isConnected) {
+      throw new Error('Sessao WhatsApp ja esta conectada.');
+    }
+
+    if (this.startPromise) {
+      await this.startPromise;
+    }
+
+    if (!this.socket) {
+      await this.beginInitializeSocket();
+    }
+
+    const socket = this.socket;
+    const generation = this.connectionGeneration;
+
+    if (!socket) {
+      throw new Error('Nao foi possivel iniciar o socket do WhatsApp para pareamento.');
+    }
+
+    if (socket.authState.creds.registered) {
+      this.updateStatus({
+        pairingCode: undefined,
+        pairingPhoneNumber: undefined,
+        pairingRequestedAt: undefined
+      });
+
+      return {
+        status: this.getStatus()
+      };
+    }
+
+    await this.waitForPairingReady(generation);
+
+    if (this.status.isConnected || socket.authState.creds.registered) {
+      throw new Error('Sessao WhatsApp ja esta conectada.');
+    }
+
+    if (this.socket !== socket || generation !== this.connectionGeneration) {
+      throw new Error('A conexao mudou enquanto o codigo era gerado. Tente novamente.');
+    }
+
+    const pairingCode = await socket.requestPairingCode(phoneNumber);
+    const requestedAt = new Date().toISOString();
+
+    this.updateStatus({
+      state: 'connecting',
+      isConnected: false,
+      pairingCode,
+      pairingPhoneNumber: phoneNumber,
+      pairingRequestedAt: requestedAt,
+      reconnectScheduled: false
+    });
+
+    return {
+      pairingCode,
+      status: this.getStatus()
+    };
+  }
+
+  private waitForPairingReady(generation: number, timeoutMs = 15_000): Promise<void> {
+    if (this.pairingReadyGeneration === generation) {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject) => {
+      let timer: NodeJS.Timeout;
+
+      const cleanup = (waiter: () => void): void => {
+        clearTimeout(timer);
+        const waiters = this.pairingReadyWaiters.get(generation);
+
+        if (!waiters) {
+          return;
+        }
+
+        const nextWaiters = waiters.filter((item) => item !== waiter);
+
+        if (nextWaiters.length > 0) {
+          this.pairingReadyWaiters.set(generation, nextWaiters);
+        } else {
+          this.pairingReadyWaiters.delete(generation);
+        }
+      };
+
+      const waiter = (): void => {
+        cleanup(waiter);
+        resolve();
+      };
+
+      timer = setTimeout(() => {
+        cleanup(waiter);
+        reject(new Error('Tempo esgotado aguardando o WhatsApp liberar o codigo de pareamento.'));
+      }, timeoutMs);
+
+      const waiters = this.pairingReadyWaiters.get(generation) ?? [];
+      waiters.push(waiter);
+      this.pairingReadyWaiters.set(generation, waiters);
+    });
+  }
+
+  private markPairingReady(generation: number): void {
+    this.pairingReadyGeneration = generation;
+    const waiters = this.pairingReadyWaiters.get(generation);
+
+    if (!waiters) {
+      return;
+    }
+
+    this.pairingReadyWaiters.delete(generation);
+
+    for (const waiter of waiters) {
+      waiter();
     }
   }
 
